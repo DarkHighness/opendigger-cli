@@ -1,4 +1,5 @@
 mod client;
+mod error;
 mod model;
 mod types;
 
@@ -6,7 +7,8 @@ use crate::api::client::ApiClient;
 use anyhow::Context;
 use once_cell::sync::OnceCell;
 
-pub use types::{RepoMetricTypes, UserMetricTypes};
+pub use error::ApiError;
+pub use types::{MetricType, RepoMetricTypes, TargetType, UserMetricTypes};
 
 pub static API: OnceCell<ApiClient> = OnceCell::new();
 

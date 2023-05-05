@@ -3,9 +3,9 @@ use config::{Config, Environment, File};
 use once_cell::sync::Lazy;
 use serde::Deserialize;
 
-
 pub static DEFAULT_BASE_URL: &str = "https://oss.x-lab.info/open_digger/github";
-pub static OPEN_DIGGER_CLI_CONFIG: Lazy<OpenDiggerCLIConfig> = Lazy::new(OpenDiggerCLIConfig::load_config);
+pub static OPEN_DIGGER_CLI_CONFIG: Lazy<OpenDiggerCLIConfig> =
+    Lazy::new(OpenDiggerCLIConfig::load_config);
 
 #[derive(Debug, Deserialize)]
 pub struct OpenDiggerCLIConfig {
@@ -28,9 +28,6 @@ impl OpenDiggerCLIConfig {
     }
 
     pub fn base_url(&self) -> &str {
-        self.base_url.as_deref()
-            .unwrap_or(DEFAULT_BASE_URL)
+        self.base_url.as_deref().unwrap_or(DEFAULT_BASE_URL)
     }
 }
-
-

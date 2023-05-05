@@ -1169,6 +1169,7 @@ name = "opendigger-cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bytes 1.4.0",
  "clap",
  "color-eyre",
  "config",

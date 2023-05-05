@@ -26,6 +26,8 @@ tokio = { version =  "1.27.0", features = ["full"] }
 reqwest = { version = "0.11.16", features = ["rustls-tls", "cookies", "gzip", "deflate", "json", "stream"] }
 http = "0.2.9"
 
+bytes = "1.4.0"
+
 strum = { version = "0.24.1", features = ["derive"] }
 
 serde = { version = "1.0.159", features = ["derive"] }

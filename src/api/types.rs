@@ -1,7 +1,22 @@
 use serde::{Deserialize, Serialize};
+use strum::IntoEnumIterator;
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, strum::AsRefStr)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, strum::AsRefStr, strum::EnumString)]
+#[strum(serialize_all = "snake_case")]
+pub enum TargetType {
+    Repo,
+    User,
+}
+
+pub trait MetricType {
+    fn available_types() -> Vec<String>;
+}
+
+#[derive(
+    Debug, Copy, Clone, Serialize, Deserialize, strum::AsRefStr, strum::EnumString, strum::EnumIter,
+)]
 #[serde(rename_all = "snake_case")]
+#[strum(serialize_all = "snake_case")]
 pub enum RepoMetricTypes {
     #[serde(rename = "openrank")]
     #[strum(serialize = "openrank")]
@@ -36,8 +51,11 @@ pub enum RepoMetricTypes {
     RepoNetwork,
 }
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, strum::AsRefStr)]
+#[derive(
+    Debug, Copy, Clone, Serialize, Deserialize, strum::AsRefStr, strum::EnumString, strum::EnumIter,
+)]
 #[serde(rename_all = "snake_case")]
+#[strum(serialize_all = "snake_case")]
 pub enum UserMetricTypes {
     #[serde(rename = "openrank")]
     #[strum(serialize = "openrank")]
@@ -45,4 +63,20 @@ pub enum UserMetricTypes {
     Activity,
     DeveloperNetwork,
     RepoNetwork,
+}
+
+impl MetricType for RepoMetricTypes {
+    fn available_types() -> Vec<String> {
+        RepoMetricTypes::iter()
+            .map(|t| t.as_ref().into())
+            .collect::<Vec<_>>()
+    }
+}
+
+impl MetricType for UserMetricTypes {
+    fn available_types() -> Vec<String> {
+        UserMetricTypes::iter()
+            .map(|t| t.as_ref().into())
+            .collect::<Vec<_>>()
+    }
 }
