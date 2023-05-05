@@ -17,68 +17,30 @@ impl Engine {
         Engine {}
     }
 
-    async fn download_repo_data(
+    async fn download_data(
         &self,
-        repo_name: String,
-        metric_type: crate::api::RepoMetricTypes,
+        name: &str,
+        metric: crate::api::Metric,
         output_file: Option<String>,
     ) -> Result<(), EngineExecutionError> {
-        let output_file = output_file.unwrap_or_else(|| {
-            format!(
-                "repo-{}-{}.json",
-                repo_name.replace('/', "-"),
-                metric_type.as_ref()
-            )
-        });
+        let output_file = output_file
+            .unwrap_or_else(|| format!("repo-{}-{}.json", name.replace('/', "-"), metric.as_ref()));
 
-        let repo_data = crate::api::get()
-            .repo_bytes(repo_name.as_str(), metric_type)
-            .await?;
+        let repo_data = crate::api::get().bytes(name, metric).await?;
 
         tokio::fs::write(output_file, repo_data).await?;
 
         Ok(())
     }
 
-    async fn download_user_data(
-        &self,
-        user_name: String,
-        metric_type: crate::api::UserMetricTypes,
-        output_file: Option<String>,
-    ) -> Result<(), EngineExecutionError> {
-        let output_file = output_file
-            .unwrap_or_else(|| format!("user-{}-{}.json", user_name, metric_type.as_ref()));
-
-        let user_data = crate::api::get()
-            .user_bytes(user_name.as_str(), metric_type)
-            .await?;
-
-        tokio::fs::write(output_file, user_data).await?;
-
-        Ok(())
-    }
-
-    pub async fn execute_command(&self, command: crate::command::Commands) {
+    pub async fn execute_command(&self, command: Commands) {
         tracing::debug!("Executing command: {:?}", command);
 
         match command {
-            Commands::DownloadRepoDataCommand(command) => {
-                self.download_repo_data(
-                    command.repo_name,
-                    command.metric_type,
-                    command.output_file,
-                )
-                .await
-                .unwrap();
-            }
-            Commands::DownloadUserDataCommand(command) => {
-                self.download_user_data(
-                    command.user_name,
-                    command.metric_type,
-                    command.output_file,
-                )
-                .await
-                .unwrap();
+            Commands::DownloadCommand(command) => {
+                self.download_data(&command.name, command.metric, command.output_file)
+                    .await
+                    .unwrap();
             }
         }
     }

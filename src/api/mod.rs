@@ -8,7 +8,7 @@ use anyhow::Context;
 use once_cell::sync::OnceCell;
 
 pub use error::ApiError;
-pub use types::{MetricType, RepoMetricTypes, TargetType, UserMetricTypes};
+pub use types::{Metric, RepoMetric, Target, UserMetric};
 
 pub static API: OnceCell<ApiClient> = OnceCell::new();
 

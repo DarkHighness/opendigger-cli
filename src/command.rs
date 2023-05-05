@@ -1,19 +1,11 @@
 #[derive(Debug)]
 pub enum Commands {
-    DownloadRepoDataCommand(DownloadRepoDataCommand),
-    DownloadUserDataCommand(DownloadUserDataCommand),
+    DownloadCommand(DownloadCommand),
 }
 
 #[derive(Debug)]
-pub struct DownloadRepoDataCommand {
-    pub repo_name: String,
-    pub metric_type: crate::api::RepoMetricTypes,
-    pub output_file: Option<String>,
-}
-
-#[derive(Debug)]
-pub struct DownloadUserDataCommand {
-    pub user_name: String,
-    pub metric_type: crate::api::UserMetricTypes,
+pub struct DownloadCommand {
+    pub name: String,
+    pub metric: crate::api::Metric,
     pub output_file: Option<String>,
 }
