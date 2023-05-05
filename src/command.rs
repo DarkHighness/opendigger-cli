@@ -1,3 +1,7 @@
+use gluesql::core::ast;
+
+use crate::sql::AggregateTableEntry;
+
 #[derive(Debug)]
 pub enum Commands {
     DownloadCommand(DownloadCommand),
@@ -13,7 +17,9 @@ pub struct DownloadCommand {
 
 #[derive(Debug)]
 pub struct SqlQueryCommand {
-    pub queries: Vec<sqlparser::ast::Query>,
+    pub statements: Vec<ast::Statement>,
+    pub entries: Vec<AggregateTableEntry>,
+    pub output_file: Option<String>,
 }
 
 impl Commands {
@@ -29,7 +35,15 @@ impl Commands {
         })
     }
 
-    pub fn new_sql_query_command(queries: Vec<sqlparser::ast::Query>) -> Commands {
-        Self::SqlQueryCommand(SqlQueryCommand { queries })
+    pub fn new_sql_query_command(
+        statements: Vec<ast::Statement>,
+        entries: Vec<AggregateTableEntry>,
+        output_file: Option<String>
+    ) -> Commands {
+        Self::SqlQueryCommand(SqlQueryCommand {
+            statements,
+            entries,
+            output_file
+        })
     }
 }

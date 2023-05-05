@@ -3,8 +3,8 @@ use strum::IntoEnumIterator;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, strum::AsRefStr, strum::EnumString)]
 #[strum(serialize_all = "snake_case")]
-pub enum Target {
-    Repo,
+pub enum Type {
+    Repository,
     User,
 }
 

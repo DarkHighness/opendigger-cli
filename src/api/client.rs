@@ -28,23 +28,29 @@ impl ApiClient {
     }
 
     pub async fn bytes(&self, name: &str, r#type: Metric) -> Result<bytes::Bytes, ApiError> {
+        tracing::debug!("Fetching raw data from {}:{}", name, r#type.as_ref());
+
         let url = format!("{}/{}/{}.json", self.base_url, name, r#type.as_ref());
         let response = self.client.get(&url).send().await?;
         let status = response.status();
 
         let data = match status {
-            _ if status.is_success() => response.bytes().await.map_err(ApiError::ReqwestError)?,
+            _ if status.is_success() => response.bytes().await.map_err(ApiError::RequestError)?,
             http::status::StatusCode::NOT_FOUND => return Err(ApiError::DataNotFound(url)),
-            _ => return Err(ApiError::BadReqwestResponse(status)),
+            _ => return Err(ApiError::BadRequestResponse(status)),
         };
+
+        tracing::debug!("Fetched raw data from {}:{}", name, r#type.as_ref());
 
         Ok(data)
     }
 
-    async fn get<T>(&self, name: &str, r#type: Metric) -> Result<Arc<T>, ApiError>
+    pub async fn get<T>(&self, name: &str, r#type: Metric) -> Result<Arc<T>, ApiError>
     where
         for<'a> T: serde::Deserialize<'a> + Send + Sync + Clone + 'static,
     {
+        tracing::debug!("Fetching data from {}:{}", name, r#type.as_ref());
+
         let url = format!("{}/{}/{}.json", self.base_url, name, r#type.as_ref());
         if let Some(data) = self
             .cache
@@ -59,12 +65,14 @@ impl ApiClient {
 
         let data: T = match status {
             _ if status.is_success() => response.json::<T>().await?,
-            http::status::StatusCode::NOT_FOUND => return Err(ApiError::DataNotFound(url.into())),
-            _ => return Err(ApiError::BadReqwestResponse(status)),
+            http::status::StatusCode::NOT_FOUND => return Err(ApiError::DataNotFound(url)),
+            _ => return Err(ApiError::BadRequestResponse(status)),
         };
         let data = Arc::new(data);
 
         self.cache.insert(url.into(), data.clone());
+
+        tracing::debug!("Fetched data from {}:{}", name, r#type.as_ref());
 
         Ok(data)
     }

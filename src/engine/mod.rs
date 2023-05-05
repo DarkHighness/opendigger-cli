@@ -1,4 +1,5 @@
 use crate::command::Commands;
+use crate::sql::Storage;
 use once_cell::sync::Lazy;
 
 #[derive(Debug)]
@@ -10,6 +11,10 @@ pub enum EngineExecutionError {
     ApiError(#[from] crate::api::ApiError),
     #[error("Failed to execute command {0}")]
     IoError(#[from] std::io::Error),
+    #[error("Failed to execute command {0}")]
+    StorageError(#[from] crate::sql::StorageBuildError),
+    #[error("Failed to execute command {0}")]
+    EngineError(#[from] Box<dyn std::error::Error + Send + Sync>),
 }
 
 impl Engine {
@@ -33,25 +38,40 @@ impl Engine {
         Ok(())
     }
 
-    async fn run_sql_query(&self, query: &sqlparser::ast::Query) {
-        crate::sql::analyse_query(query);
-    }
-
-    pub async fn execute_command(&self, command: Commands) {
+    pub async fn execute_command(&self, command: Commands) -> Result<(), EngineExecutionError> {
         tracing::debug!("Executing command: {:?}", command);
 
         match command {
             Commands::DownloadCommand(command) => {
                 self.download_data(&command.name, command.metric, command.output_file)
-                    .await
-                    .unwrap();
+                    .await?;
             }
             Commands::SqlQueryCommand(command) => {
-                for query in command.queries {
-                    self.run_sql_query(&query).await
+                let (statements, entries) = (command.statements, command.entries);
+                let storage = Storage::build_from_entries(&entries).await?;
+
+                tracing::debug!("Storage: {:?}", storage);
+
+                let mut engine = gluesql::prelude::Glue::new(storage);
+
+                for statement in statements {
+                    let payload = engine.execute_stmt(&statement)
+                        .map_err(|e| EngineExecutionError::EngineError(Box::new(e)))?;
+
+                    tracing::debug!("Payload: {:?}", payload);
+
+                    let output = crate::ui::render_table(&payload);
+
+                    if let Some(output_file) = &command.output_file {
+                        tokio::fs::write(output_file, output).await?;
+                    } else {
+                        println!("{}", output);
+                    }
                 }
             }
         }
+
+        Ok(())
     }
 }
 
