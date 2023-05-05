@@ -23,6 +23,12 @@ pub enum Commands {
         #[clap(short, long)]
         output_file: Option<String>,
     },
+    #[clap(about = "Query data with sql")]
+    #[clap(name = "sql")]
+    SqlQuery {
+        #[clap(name = "query")]
+        query: String,
+    },
 }
 
 fn unknown_metric_type_error(r#type: crate::api::Target, metric_type: &str) -> ! {
@@ -44,6 +50,13 @@ fn unknown_metric_type_error(r#type: crate::api::Target, metric_type: &str) -> !
         ),
     )
     .exit()
+}
+
+fn invalid_sql_query_error(sql: &str) -> ! {
+    let mut cmd = CLICommands::command();
+
+    cmd.error(ErrorKind::InvalidValue, format!("Invalid sql query: {sql}"))
+        .exit()
 }
 
 pub fn parse_command() -> crate::command::Commands {
@@ -70,11 +83,35 @@ pub fn parse_command() -> crate::command::Commands {
                 }
             };
 
-            crate::command::Commands::DownloadCommand(crate::command::DownloadCommand {
-                name,
-                metric,
-                output_file,
-            })
+            crate::command::Commands::new_download_command(name, metric, output_file)
+        }
+        Commands::SqlQuery { query } => {
+            let dialect = sqlparser::dialect::GenericDialect;
+
+            match sqlparser::parser::Parser::parse_sql(&dialect, &query) {
+                Ok(statements) => {
+                    let before_len = statements.len();
+                    let queries: Vec<sqlparser::ast::Query> = statements
+                        .into_iter()
+                        .filter_map(|e| {
+                            if let sqlparser::ast::Statement::Query(query) = e {
+                                let query = Box::<sqlparser::ast::Query>::into_inner(query);
+                                Some(query)
+                            } else {
+                                None
+                            }
+                        })
+                        .collect();
+                    let after_len = queries.len();
+
+                    if before_len != after_len || after_len == 0 {
+                        tracing::warn!("Only select statement is supported in sql query");
+                    }
+
+                    crate::command::Commands::new_sql_query_command(queries)
+                }
+                Err(_) => invalid_sql_query_error(query.as_str()),
+            }
         }
     }
 }

@@ -92,6 +92,16 @@ impl AsRef<str> for Metric {
     }
 }
 
+impl Metric {
+    pub fn is_repo_metric(&self) -> bool {
+        matches!(self, Metric::Repo(_))
+    }
+
+    pub fn is_user_metric(&self) -> bool {
+        matches!(self, Metric::User(_))
+    }
+}
+
 impl RepoMetric {
     pub fn available_types() -> Vec<&'static str> {
         RepoMetric::iter().map(|t| t.into()).collect::<Vec<_>>()

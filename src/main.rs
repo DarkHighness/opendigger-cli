@@ -1,3 +1,6 @@
+#![feature(let_chains)]
+#![feature(box_into_inner)]
+
 use anyhow::Context;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
@@ -7,6 +10,7 @@ mod cli;
 mod command;
 mod config;
 mod engine;
+mod sql;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

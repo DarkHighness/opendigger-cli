@@ -33,6 +33,10 @@ impl Engine {
         Ok(())
     }
 
+    async fn run_sql_query(&self, query: &sqlparser::ast::Query) {
+        crate::sql::analyse_query(query);
+    }
+
     pub async fn execute_command(&self, command: Commands) {
         tracing::debug!("Executing command: {:?}", command);
 
@@ -41,6 +45,11 @@ impl Engine {
                 self.download_data(&command.name, command.metric, command.output_file)
                     .await
                     .unwrap();
+            }
+            Commands::SqlQueryCommand(command) => {
+                for query in command.queries {
+                    self.run_sql_query(&query).await
+                }
             }
         }
     }

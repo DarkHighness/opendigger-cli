@@ -33,10 +33,7 @@ impl ApiClient {
         let status = response.status();
 
         let data = match status {
-            _ if status.is_success() => response
-                .bytes()
-                .await
-                .map_err(ApiError::ReqwestError)?,
+            _ if status.is_success() => response.bytes().await.map_err(ApiError::ReqwestError)?,
             http::status::StatusCode::NOT_FOUND => return Err(ApiError::DataNotFound(url)),
             _ => return Err(ApiError::BadReqwestResponse(status)),
         };
