@@ -1,5 +1,6 @@
 use crate::command::Commands;
 use crate::sql::Storage;
+use gluesql::prelude::Payload;
 use once_cell::sync::Lazy;
 
 #[derive(Debug)]
@@ -55,17 +56,20 @@ impl Engine {
                 let mut engine = gluesql::prelude::Glue::new(storage);
 
                 for statement in statements {
-                    let payload = engine.execute_stmt(&statement)
+                    let payload = engine
+                        .execute_stmt(&statement)
                         .map_err(|e| EngineExecutionError::EngineError(Box::new(e)))?;
 
                     tracing::debug!("Payload: {:?}", payload);
 
-                    let output = crate::ui::render_table(&payload);
-
-                    if let Some(output_file) = &command.output_file {
-                        tokio::fs::write(output_file, output).await?;
-                    } else {
-                        println!("{}", output);
+                    if let Payload::Select { labels, rows } = payload {
+                        if let Some(output_file) = &command.output_file {
+                            let output = crate::ui::render_csv(&labels, &rows);
+                            tokio::fs::write(output_file, output).await?;
+                        } else {
+                            let output = crate::ui::render_table(&labels, &rows);
+                            println!("{}", output);
+                        }
                     }
                 }
             }

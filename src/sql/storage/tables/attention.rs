@@ -90,7 +90,7 @@ impl AttentionTable {
         for (owner, item) in data {
             let item = item?;
             for (time, value) in item.iter() {
-                items.push((owner.clone(), time.clone(), value.clone()));
+                items.push((owner.clone(), time.clone(), *value));
             }
         }
 

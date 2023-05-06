@@ -38,12 +38,12 @@ impl Commands {
     pub fn new_sql_query_command(
         statements: Vec<ast::Statement>,
         entries: Vec<AggregateTableEntry>,
-        output_file: Option<String>
+        output_file: Option<String>,
     ) -> Commands {
         Self::SqlQueryCommand(SqlQueryCommand {
             statements,
             entries,
-            output_file
+            output_file,
         })
     }
 }

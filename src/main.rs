@@ -17,6 +17,7 @@ mod ui;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::registry()
+        .with(tracing_subscriber::EnvFilter::from_default_env())
         .with(
             tracing_subscriber::fmt::layer()
                 .with_timer(tracing_subscriber::fmt::time::LocalTime::rfc_3339()),

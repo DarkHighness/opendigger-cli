@@ -116,7 +116,7 @@ pub fn parse_command() -> crate::command::Commands {
                 errors.into_iter().map(|e| e.unwrap_err()).collect(),
             );
 
-            if errors.len() > 0 {
+            if !errors.is_empty() {
                 invalid_sql_query_error(
                     query.as_str(),
                     Some(

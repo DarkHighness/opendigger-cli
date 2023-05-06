@@ -1,5 +1,7 @@
-use gluesql::{prelude::{Payload, Value}, core::data::Interval};
+use gluesql::{core::data::Interval, prelude::Value};
 use itertools::Itertools;
+use term_table::{row::Row, table_cell::TableCell};
+use term_table::{Table, TableStyle};
 
 pub fn render_value(value: &Value) -> String {
     match value {
@@ -19,16 +21,14 @@ pub fn render_value(value: &Value) -> String {
         Value::Decimal(value) => value.to_string(),
         Value::Time(value) => value.to_string(),
         Value::Uuid(value) => value.to_string(),
-        Value::Interval(value) => {
-            match value {
-                Interval::Month(value) => format!("{} months", value),
-                Interval::Microsecond(value) => format!("{} ms", value),
-            }
+        Value::Interval(value) => match value {
+            Interval::Month(value) => format!("{} months", value),
+            Interval::Microsecond(value) => format!("{} ms", value),
         },
         Value::List(value) => {
             let values = value
                 .iter()
-                .map(|value| render_value(value))
+                .map(render_value)
                 .collect::<Vec<_>>()
                 .join(", ");
 
@@ -46,27 +46,37 @@ pub fn render_value(value: &Value) -> String {
     }
 }
 
-pub fn render_table(payload: &Payload) -> String {
-    if let Payload::Select { labels, rows } = payload {
-        let labels = labels
-            .iter()
-            .map(|label| label.to_string())
-            .collect::<Vec<_>>()
-            .join(", ");
+pub fn render_csv(header: &[String], rows: &[gluesql::prelude::Row]) -> String {
+    let header = header
+        .iter()
+        .map(|header: &String| header.to_string())
+        .collect::<Vec<_>>()
+        .join(", ");
 
-        let rows = rows
-            .iter()
-            .map(|row| {
-                row.iter()
-                    .map(|value| render_value(value))
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            })
-            .collect::<Vec<_>>()
-            .join("\n");
+    let rows = rows
+        .iter()
+        .map(|row| row.iter().map(render_value).collect::<Vec<_>>().join(", "))
+        .collect::<Vec<_>>()
+        .join("\n");
 
-        format!("{}\n{}", labels, rows)
-    } else {
-        format!("{:?}", payload)
+    format!("{}\n{}", header, rows)
+}
+
+pub fn render_table(header: &[String], rows: &[gluesql::prelude::Row]) -> String {
+    let mut table = Table::new();
+
+    table.max_column_width = 40;
+    table.style = TableStyle::elegant();
+
+    table.add_row(Row::new(
+        header.iter().map(|header| TableCell::new(header.as_str())),
+    ));
+
+    for row in rows {
+        table.add_row(Row::new(
+            row.iter().map(|value| TableCell::new(render_value(value))),
+        ));
     }
-} 
+
+    table.render()
+}

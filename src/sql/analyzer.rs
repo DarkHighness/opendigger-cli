@@ -88,10 +88,10 @@ impl Analyzer {
     fn try_collect_table_info(
         &mut self,
         left: &ast::Expr,
-        op: &ast::BinaryOperator,
+        _op: &ast::BinaryOperator,
         right: &ast::Expr,
     ) {
-        if let op = ast::BinaryOperator::Eq {
+        if let _op = ast::BinaryOperator::Eq {
             let (alias, condition) = match left {
                 ast::Expr::CompoundIdentifier { alias, ident } => (alias.as_str(), ident.as_str()),
                 ast::Expr::Identifier(id) => ("<unnamed>", id.as_str()),
@@ -110,7 +110,7 @@ impl Analyzer {
             let table = self.lookup_alias(alias);
 
             if let Some(table) = table &&
-                let Some(entry) = TableEntry::try_build_from_type_and_owner(table, &owner){
+                let Some(entry) = TableEntry::try_build_from_type_and_owner(table, owner){
                     tracing::debug!("Found table entry: {:?}", entry);
 
                     self.entries.insert(entry);
@@ -125,7 +125,7 @@ impl Analyzer {
             ast::Expr::InList {
                 expr,
                 list,
-                negated,
+                negated: _,
             } => {
                 self.analyze_expr(expr)?;
                 for expr in list {
@@ -135,14 +135,14 @@ impl Analyzer {
             ast::Expr::InSubquery {
                 expr,
                 subquery,
-                negated,
+                negated: _,
             } => {
                 self.analyze_expr(expr)?;
                 self.analyze_query(subquery)?;
             }
             ast::Expr::Between {
                 expr,
-                negated,
+                negated: _,
                 low,
                 high,
             } => {
@@ -152,7 +152,7 @@ impl Analyzer {
             }
             ast::Expr::Like {
                 expr,
-                negated,
+                negated: _,
                 pattern,
             } => {
                 self.analyze_expr(expr)?;
@@ -160,7 +160,7 @@ impl Analyzer {
             }
             ast::Expr::ILike {
                 expr,
-                negated,
+                negated: _,
                 pattern,
             } => {
                 self.analyze_expr(expr)?;
@@ -172,11 +172,14 @@ impl Analyzer {
                 self.analyze_expr(left)?;
                 self.analyze_expr(right)?;
             }
-            ast::Expr::UnaryOp { op, expr } => {
+            ast::Expr::UnaryOp { op: _, expr } => {
                 self.analyze_expr(expr)?;
             }
             ast::Expr::Nested(expr) => self.analyze_expr(expr)?,
-            ast::Expr::Exists { subquery, negated } => self.analyze_query(subquery)?,
+            ast::Expr::Exists {
+                subquery,
+                negated: _,
+            } => self.analyze_query(subquery)?,
             ast::Expr::Subquery(subquery) => self.analyze_query(subquery)?,
             ast::Expr::Case {
                 operand,
@@ -204,8 +207,8 @@ impl Analyzer {
             }
             ast::Expr::Interval {
                 expr,
-                leading_field,
-                last_field,
+                leading_field: _,
+                last_field: _,
             } => {
                 self.analyze_expr(expr)?;
             }

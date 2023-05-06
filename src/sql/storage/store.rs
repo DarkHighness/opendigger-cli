@@ -36,11 +36,7 @@ impl Store for Storage {
     }
 
     async fn scan_data(&self, table_name: &str) -> gluesql::core::result::Result<RowIter> {
-        let table = self
-            .tables
-            .iter()
-            .find(|t| t.name() == table_name)
-            .unwrap();
+        let table = self.tables.iter().find(|t| t.name() == table_name).unwrap();
 
         let rows = table.scan_data();
 

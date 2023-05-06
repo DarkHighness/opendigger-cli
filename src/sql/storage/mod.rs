@@ -1,7 +1,6 @@
 use crate::sql::AggregateTableEntry;
 
 use futures::future;
-use gluesql::core::{data::Schema, store::RowIter};
 
 use std::fmt::Debug;
 
@@ -10,8 +9,8 @@ use self::tables::StorageTable;
 mod alter_table;
 mod index;
 mod store;
-mod transaction;
 pub mod tables;
+mod transaction;
 
 #[derive(Debug)]
 pub struct Storage {
