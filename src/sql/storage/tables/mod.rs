@@ -1,5 +1,9 @@
+mod activity;
+mod attention;
 mod openrank;
 
+pub use activity::ActivityTable;
+pub use attention::AttentionTable;
 use gluesql::{
     core::data::Schema,
     prelude::{Key, Row},

@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
 
@@ -111,5 +113,11 @@ impl RepoMetric {
 impl UserMetric {
     pub fn available_types() -> Vec<&'static str> {
         UserMetric::iter().map(|t| t.into()).collect::<Vec<_>>()
+    }
+}
+
+impl Display for Type {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_ref())
     }
 }

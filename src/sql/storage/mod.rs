@@ -24,6 +24,8 @@ pub enum StorageBuildError {
     ApiError(#[from] crate::api::ApiError),
     #[error("Errors: {0:?}")]
     MultiError(Vec<StorageBuildError>),
+    #[error("Type is not supported: {0}{1}")]
+    UnsupoortedType(String, crate::api::Type),
 }
 
 impl Storage {

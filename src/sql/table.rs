@@ -56,7 +56,11 @@ pub enum RepoTables {
     strum::IntoStaticStr,
     strum::AsRefStr,
 )]
-pub enum UserTables {}
+pub enum UserTables {
+    #[strum(serialize = "Openrank")]
+    OpenRank,
+    Activity,
+}
 
 pub static SUPPORTED_TABLE_NAMES: Lazy<Vec<&'static str>> =
     Lazy::new(TableEntry::supported_table_names);
@@ -115,11 +119,24 @@ impl TableTypes {
                 RepoTables::OpenRank => Box::new(
                     storage::tables::OpenRankTable::build(owners, crate::api::Type::Repository)
                         .await?,
-                ),
-                RepoTables::Activity => unimplemented!(),
-                RepoTables::Attention => unimplemented!(),
+                ) as Box<dyn StorageTable>,
+                RepoTables::Activity => Box::new(
+                    storage::tables::ActivityTable::build(owners, crate::api::Type::Repository)
+                        .await?,
+                ) as Box<dyn StorageTable>,
+                RepoTables::Attention => Box::new(
+                    storage::tables::AttentionTable::build(owners, crate::api::Type::Repository)
+                        .await?,
+                ) as Box<dyn StorageTable>,
             },
-            TableTypes::User(_table) => unimplemented!(),
+            TableTypes::User(table) => match table {
+                UserTables::OpenRank => Box::new(
+                    storage::tables::OpenRankTable::build(owners, crate::api::Type::User).await?,
+                ) as Box<dyn StorageTable>,
+                UserTables::Activity => Box::new(
+                    storage::tables::ActivityTable::build(owners, crate::api::Type::User).await?,
+                ) as Box<dyn StorageTable>,
+            },
         };
 
         Ok(table)
