@@ -1,6 +1,6 @@
 #[derive(Debug, thiserror::Error)]
 pub enum ApiError {
-    #[error("Request error: {0}")]
+    #[error(transparent)]
     RequestError(#[from] reqwest::Error),
     #[error("Data not found: {0}")]
     DataNotFound(String),

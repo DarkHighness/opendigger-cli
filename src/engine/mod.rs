@@ -8,13 +8,13 @@ pub struct Engine {}
 
 #[derive(Debug, thiserror::Error)]
 pub enum EngineExecutionError {
-    #[error("Failed to execute command {0}")]
+    #[error(transparent)]
     ApiError(#[from] crate::api::ApiError),
-    #[error("Failed to execute command {0}")]
+    #[error(transparent)]
     IoError(#[from] std::io::Error),
-    #[error("Failed to execute command {0}")]
+    #[error(transparent)]
     StorageError(#[from] crate::sql::StorageBuildError),
-    #[error("Failed to execute command {0}")]
+    #[error(transparent)]
     EngineError(#[from] Box<dyn std::error::Error + Send + Sync>),
 }
 

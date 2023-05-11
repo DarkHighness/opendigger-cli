@@ -19,7 +19,7 @@ pub struct Storage {
 
 #[derive(Debug, thiserror::Error)]
 pub enum StorageBuildError {
-    #[error("ApiError: {0}")]
+    #[error(transparent)]
     ApiError(#[from] crate::api::ApiError),
     #[error("Errors: {0:?}")]
     MultiError(Vec<StorageBuildError>),

@@ -12,6 +12,7 @@ use super::Storage;
 
 #[async_trait(? Send)]
 impl Store for Storage {
+    #[tracing::instrument(skip(self))]
     async fn fetch_schema(
         &self,
         table_name: &str,
@@ -23,18 +24,21 @@ impl Store for Storage {
             .map(|t| t.schema()))
     }
 
+    #[tracing::instrument(skip(self))]
     async fn fetch_all_schemas(&self) -> gluesql::core::result::Result<Vec<Schema>> {
         self.tables.iter().map(|t| Ok(t.schema())).collect()
     }
 
+    #[tracing::instrument(skip(self))]
     async fn fetch_data(
         &self,
         _table_name: &str,
         _key: &Key,
     ) -> gluesql::core::result::Result<Option<Row>> {
-        todo!()
+        unimplemented!()
     }
 
+    #[tracing::instrument(skip(self))]
     async fn scan_data(&self, table_name: &str) -> gluesql::core::result::Result<RowIter> {
         let table = self.tables.iter().find(|t| t.name() == table_name).unwrap();
 

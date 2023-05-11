@@ -21,7 +21,7 @@
             },
             "args": [
                 "sql",
-                "select * from Openrank a, Openrank b where a.name = 'X-lab2017/open-digger' and b.name ='X-lab2017/open-digger'"
+                "select * from Openrank l left join Activity r on l.name = r.name where l.name = 'X-lab2017/open-digger'"
             ],
             "cwd": "${workspaceFolder}"
         },
