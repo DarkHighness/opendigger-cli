@@ -1,8 +1,9 @@
-use crate::sql::table::{AggregateTableEntry, TableEntry};
 use gluesql::core::ast;
 use itertools::Itertools;
 use std::collections::HashMap;
 use std::collections::HashSet;
+
+use crate::sql::table::TableEntry;
 
 #[derive(Debug)]
 pub struct Analyzer {
@@ -20,22 +21,14 @@ pub enum AnalyzeError {
 
 #[derive(Debug)]
 pub struct AnalysisOutput {
-    pub tables: Vec<AggregateTableEntry>,
+    pub tables: Vec<TableEntry>,
 }
 
 impl AnalysisOutput {
     pub fn build_from_table_entries(tables: HashSet<TableEntry>) -> Self {
-        let tables = tables
-            .into_iter()
-            .group_by(|e| e.r#type)
-            .into_iter()
-            .map(|(k, v)| AggregateTableEntry {
-                r#type: k,
-                owners: v.map(|e| e.owner).collect(),
-            })
-            .collect();
-
-        Self { tables }
+        Self {
+            tables: tables.into_iter().collect_vec(),
+        }
     }
 }
 
@@ -88,10 +81,10 @@ impl Analyzer {
     fn try_collect_table_info(
         &mut self,
         left: &ast::Expr,
-        _op: &ast::BinaryOperator,
+        op: &ast::BinaryOperator,
         right: &ast::Expr,
     ) {
-        if let _op = ast::BinaryOperator::Eq {
+        if matches!(op, ast::BinaryOperator::Eq) {
             let (alias, condition) = match left {
                 ast::Expr::CompoundIdentifier { alias, ident } => (alias.as_str(), ident.as_str()),
                 ast::Expr::Identifier(id) => ("<unnamed>", id.as_str()),
@@ -110,7 +103,7 @@ impl Analyzer {
             let table = self.lookup_alias(alias);
 
             if let Some(table) = table &&
-                let Some(entry) = TableEntry::try_build_from_type_and_owner(table, owner){
+                let Some(entry) = TableEntry::new(table, owner){
                     tracing::debug!("Found table entry: {:?}", entry);
 
                     self.entries.insert(entry);

@@ -45,13 +45,13 @@ impl ApiClient {
         Ok(data)
     }
 
-    pub async fn get<T>(&self, name: &str, r#type: Metric) -> Result<Arc<T>, ApiError>
+    pub async fn get<T>(&self, owner: &str, r#type: Metric) -> Result<Arc<T>, ApiError>
     where
         for<'a> T: serde::Deserialize<'a> + Send + Sync + Clone + 'static,
     {
-        tracing::debug!("Fetching data from {}:{}", name, r#type.as_ref());
+        tracing::debug!("Fetching data from {}:{}", owner, r#type.as_ref());
 
-        let url = format!("{}/{}/{}.json", self.base_url, name, r#type.as_ref());
+        let url = format!("{}/{}/{}.json", self.base_url, owner, r#type.as_ref());
         if let Some(data) = self
             .cache
             .get(url.as_str())
@@ -72,7 +72,7 @@ impl ApiClient {
 
         self.cache.insert(url.into(), data.clone());
 
-        tracing::debug!("Fetched data from {}:{}", name, r#type.as_ref());
+        tracing::debug!("Fetched data from {}:{}", owner, r#type.as_ref());
 
         Ok(data)
     }

@@ -30,7 +30,7 @@ async fn main() -> anyhow::Result<()> {
 
     api::setup(base_url).context("Setting up Api client")?;
 
-    let command = cli::parse_command();
+    let command = cli::parse_command().await;
 
     engine::ENGINE
         .execute_command(command)

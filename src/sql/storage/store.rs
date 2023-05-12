@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use async_trait::async_trait;
 use gluesql::{
     core::{
@@ -8,6 +10,8 @@ use gluesql::{
     prelude::{Key, Row},
 };
 
+use crate::sql::TableType;
+
 use super::Storage;
 
 #[async_trait(? Send)]
@@ -17,16 +21,31 @@ impl Store for Storage {
         &self,
         table_name: &str,
     ) -> gluesql::core::result::Result<Option<Schema>> {
-        Ok(self
-            .tables
-            .iter()
-            .find(|t| t.name() == table_name)
-            .map(|t| t.schema()))
+        let schema = self.strategy.fetch_all_schemas().await.map_err(|err| {
+            gluesql::core::result::Error::StorageMsg(format!(
+                "Failed to fetch all schemas: {}",
+                err
+            ))
+        })?;
+
+        let schema = schema
+            .into_iter()
+            .find(|schema| schema.table_name == table_name)
+            .map(|schema| schema.clone());
+
+        Ok(schema)
     }
 
     #[tracing::instrument(skip(self))]
     async fn fetch_all_schemas(&self) -> gluesql::core::result::Result<Vec<Schema>> {
-        self.tables.iter().map(|t| Ok(t.schema())).collect()
+        let schema = self.strategy.fetch_all_schemas().await.map_err(|err| {
+            gluesql::core::result::Error::StorageMsg(format!(
+                "Failed to fetch all schemas: {}",
+                err
+            ))
+        })?;
+
+        Ok(schema)
     }
 
     #[tracing::instrument(skip(self))]
@@ -40,11 +59,26 @@ impl Store for Storage {
 
     #[tracing::instrument(skip(self))]
     async fn scan_data(&self, table_name: &str) -> gluesql::core::result::Result<RowIter> {
-        let table = self.tables.iter().find(|t| t.name() == table_name).unwrap();
+        let table_type = TableType::from_str(table_name)
+            .map_err(|err| gluesql::core::result::Error::StorageMsg(err.to_string()))?;
 
-        let rows = table.scan_data();
+        let mut tables = self.tables.lock().unwrap();
 
-        Ok(Box::new(rows.into_iter().map(Ok)))
+        if !tables.contains_key(&table_type) {
+            let table = self
+                .strategy
+                .fetch_table(table_type)
+                .await
+                .map_err(|err| gluesql::core::result::Error::StorageMsg(err.to_string()))?;
+
+            tables.insert(table_type, table);
+        }
+
+        let table = tables.get(&table_type).unwrap();
+
+        Ok(Box::new(
+            table.items().into_iter().map(|(key, row)| Ok((key, row))),
+        ))
     }
 }
 

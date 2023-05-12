@@ -1,16 +1,7 @@
-use crate::sql::analyzer::{AnalysisOutput, AnalyzeError};
-use gluesql::core::ast;
+pub use storage::{Storage, StorageError};
+pub use strategy::{create_strategy_instance, StorageStrategy, StorageStrategyType};
+pub use table::TableType;
 
-pub use storage::{Storage, StorageBuildError};
-pub use table::{AggregateTableEntry, TableTypes, UserTables};
-
-mod analyzer;
 mod storage;
+mod strategy;
 mod table;
-
-pub fn analyse_statements(statements: &[ast::Statement]) -> Result<AnalysisOutput, AnalyzeError> {
-    let analyzer = analyzer::Analyzer::new();
-    let result = analyzer.analyze_statements(statements)?;
-
-    Ok(result)
-}

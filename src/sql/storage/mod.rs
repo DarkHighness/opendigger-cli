@@ -1,56 +1,62 @@
-use crate::sql::AggregateTableEntry;
+use std::{collections::HashMap, fmt::Debug};
 
-use futures::future;
-
-use std::fmt::Debug;
-
-use self::tables::StorageTable;
+use super::{table::StorageTable, TableType};
 
 mod alter_table;
 mod index;
 mod store;
-pub mod tables;
 mod transaction;
 
 #[derive(Debug)]
 pub struct Storage {
-    pub tables: Vec<Box<dyn StorageTable>>,
+    strategy: Box<dyn crate::sql::StorageStrategy>,
+    tables: std::sync::Mutex<HashMap<TableType, StorageTable>>,
 }
 
 #[derive(Debug, thiserror::Error)]
-pub enum StorageBuildError {
+pub enum StorageError {
     #[error(transparent)]
     ApiError(#[from] crate::api::ApiError),
-    #[error("Errors: {0:?}")]
-    MultiError(Vec<StorageBuildError>),
+    #[error(transparent)]
+    StrategyError(#[from] crate::sql::strategy::StorageStrategyError),
     #[error("Type is not supported: {0}{1}")]
-    UnsupoortedType(String, crate::api::Type),
+    UnsupportedTableType(String, crate::api::Type),
 }
 
 impl Storage {
-    pub async fn build_from_entries(
-        entries: &[AggregateTableEntry],
-    ) -> Result<Self, StorageBuildError> {
-        let tables = future::join_all(
-            entries
-                .iter()
-                .map(async move |entry| entry.to_storage_table().await),
-        )
-        .await;
+    pub async fn build_from_strategy(
+        strategy: Box<dyn crate::sql::StorageStrategy>,
+    ) -> Result<Self, StorageError> {
+        let storage = Self {
+            strategy,
+            tables: Default::default(),
+        };
 
-        let (tables, errors): (Vec<_>, Vec<_>) = tables.into_iter().partition(Result::is_ok);
+        Ok(storage)
+    }
 
-        let (tables, errors): (Vec<_>, Vec<_>) = (
-            tables.into_iter().map(Result::unwrap).collect(),
-            errors.into_iter().map(Result::unwrap_err).collect(),
-        );
+    pub async fn fetch_table(
+        &mut self,
+        table_type: TableType,
+    ) -> Result<Option<StorageTable>, StorageError> {
+        let guard = self.tables.lock().unwrap();
 
-        if errors.is_empty() {
-            Ok(Self { tables })
-        } else if errors.len() == 1 {
-            Err(errors.into_iter().next().unwrap())
-        } else {
-            Err(StorageBuildError::MultiError(errors))
+        if guard.contains_key(&table_type) {
+            return Ok(guard.get(&table_type).cloned());
         }
+
+        drop(guard);
+
+        let table = self
+            .strategy
+            .fetch_table(table_type)
+            .await
+            .map_err(|err| StorageError::StrategyError(err))?;
+
+        let mut guard = self.tables.lock().unwrap();
+
+        guard.insert(table_type, table);
+
+        Ok(guard.get(&table_type).cloned())
     }
 }

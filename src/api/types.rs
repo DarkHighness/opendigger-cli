@@ -10,9 +10,9 @@ pub enum Type {
     User,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum Metric {
-    Repo(RepoMetric),
+    Repo(RepositoryMetric),
     User(UserMetric),
 }
 
@@ -20,6 +20,9 @@ pub enum Metric {
     Debug,
     Copy,
     Clone,
+    Eq,
+    PartialEq,
+    Hash,
     Serialize,
     Deserialize,
     strum::AsRefStr,
@@ -29,7 +32,7 @@ pub enum Metric {
 )]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
-pub enum RepoMetric {
+pub enum RepositoryMetric {
     #[serde(rename = "openrank")]
     #[strum(serialize = "openrank")]
     OpenRank,
@@ -67,6 +70,9 @@ pub enum RepoMetric {
     Debug,
     Copy,
     Clone,
+    Eq,
+    PartialEq,
+    Hash,
     Serialize,
     Deserialize,
     strum::AsRefStr,
@@ -104,9 +110,11 @@ impl Metric {
     }
 }
 
-impl RepoMetric {
+impl RepositoryMetric {
     pub fn available_types() -> Vec<&'static str> {
-        RepoMetric::iter().map(|t| t.into()).collect::<Vec<_>>()
+        RepositoryMetric::iter()
+            .map(|t| t.into())
+            .collect::<Vec<_>>()
     }
 }
 

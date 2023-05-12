@@ -13,7 +13,7 @@ pub enum EngineExecutionError {
     #[error(transparent)]
     IoError(#[from] std::io::Error),
     #[error(transparent)]
-    StorageError(#[from] crate::sql::StorageBuildError),
+    StorageError(#[from] crate::sql::StorageError),
     #[error(transparent)]
     EngineError(#[from] Box<dyn std::error::Error + Send + Sync>),
 }
@@ -48,8 +48,8 @@ impl Engine {
                     .await?;
             }
             Commands::SqlQueryCommand(command) => {
-                let (statements, entries) = (command.statements, command.entries);
-                let storage = Storage::build_from_entries(&entries).await?;
+                let (statements, strategy) = (command.statements, command.strategy);
+                let storage = Storage::build_from_strategy(strategy).await?;
 
                 tracing::debug!("Storage: {:?}", storage);
 
