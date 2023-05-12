@@ -1,5 +1,6 @@
 use crate::command::Commands;
 use crate::sql::Storage;
+use gluesql::core::ast;
 use gluesql::prelude::Payload;
 use once_cell::sync::Lazy;
 
@@ -39,6 +40,54 @@ impl Engine {
         Ok(())
     }
 
+    async fn execute_sql_query(
+        &self,
+        statements: Vec<ast::Statement>,
+        strategy: Box<dyn crate::sql::StorageStrategy>,
+        output_file: Option<String>,
+    ) -> Result<(), EngineExecutionError> {
+        let storage = Storage::build_from_strategy(strategy).await?;
+
+        tracing::debug!("Storage: {:?}", storage);
+
+        let mut engine = gluesql::prelude::Glue::new(storage);
+
+        for statement in statements {
+            let payload = engine
+                .execute_stmt(&statement)
+                .map_err(|e| EngineExecutionError::EngineError(Box::new(e)))?;
+
+            tracing::debug!("Payload: {:?}", payload);
+
+            match payload {
+                Payload::Select { labels, rows } => {
+                    if let Some(output_file) = output_file.as_ref() {
+                        let output = crate::ui::render_csv_row(&labels, &rows);
+                        tokio::fs::write(output_file, output).await?;
+                    } else {
+                        let output = crate::ui::render_table_row(&labels, &rows);
+                        println!("{}", output);
+                    }
+                }
+                Payload::ShowColumns(columns) => {
+                    let output = crate::ui::render_table(
+                        &["column".to_string(), "type".to_string()],
+                        &columns
+                            .into_iter()
+                            .map(|(name, typ)| vec![name, typ.to_string()])
+                            .collect::<Vec<_>>(),
+                    );
+                    println!("{}", output);
+                }
+                _ => {
+                    tracing::error!("Invalid payload: {:?}", payload);
+                }
+            }
+        }
+
+        Ok(())
+    }
+
     pub async fn execute_command(&self, command: Commands) -> Result<(), EngineExecutionError> {
         tracing::debug!("Executing command: {:?}", command);
 
@@ -48,30 +97,8 @@ impl Engine {
                     .await?;
             }
             Commands::SqlQueryCommand(command) => {
-                let (statements, strategy) = (command.statements, command.strategy);
-                let storage = Storage::build_from_strategy(strategy).await?;
-
-                tracing::debug!("Storage: {:?}", storage);
-
-                let mut engine = gluesql::prelude::Glue::new(storage);
-
-                for statement in statements {
-                    let payload = engine
-                        .execute_stmt(&statement)
-                        .map_err(|e| EngineExecutionError::EngineError(Box::new(e)))?;
-
-                    tracing::debug!("Payload: {:?}", payload);
-
-                    if let Payload::Select { labels, rows } = payload {
-                        if let Some(output_file) = &command.output_file {
-                            let output = crate::ui::render_csv(&labels, &rows);
-                            tokio::fs::write(output_file, output).await?;
-                        } else {
-                            let output = crate::ui::render_table(&labels, &rows);
-                            println!("{}", output);
-                        }
-                    }
-                }
+                self.execute_sql_query(command.statements, command.strategy, command.output_file)
+                    .await?;
             }
         }
 

@@ -61,8 +61,10 @@ impl Store for Storage {
     async fn scan_data(&self, table_name: &str) -> gluesql::core::result::Result<RowIter> {
         let table_type = TableType::from_str(table_name)
             .map_err(|err| gluesql::core::result::Error::StorageMsg(err.to_string()))?;
-        
-        let table = self.fetch_table(table_type).await
+
+        let table = self
+            .fetch_table(table_type)
+            .await
             .map_err(|err| gluesql::core::result::Error::StorageMsg(err.to_string()))?
             .map(|table| table.items().into_iter().map(|(key, row)| Ok((key, row))));
 

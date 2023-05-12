@@ -31,10 +31,6 @@ impl StorageStrategy for BruteForceStoragePolicy {
             .filter_map(|capture| TableOwner::new(capture.as_str()))
             .collect();
 
-        if owners.is_empty() {
-            anyhow::bail!("No owner found in query: {}", query);
-        }
-
         tracing::debug!("Found owners: {:?}", owners);
 
         self.owners = Some(owners);

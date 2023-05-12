@@ -3,7 +3,7 @@ use itertools::Itertools;
 use term_table::{row::Row, table_cell::TableCell};
 use term_table::{Table, TableStyle};
 
-pub fn render_value(value: &Value) -> String {
+pub fn render_sql_value(value: &Value) -> String {
     match value {
         Value::Null => "NULL".to_string(),
         Value::I8(value) => value.to_string(),
@@ -28,7 +28,7 @@ pub fn render_value(value: &Value) -> String {
         Value::List(value) => {
             let values = value
                 .iter()
-                .map(render_value)
+                .map(render_sql_value)
                 .collect::<Vec<_>>()
                 .join(", ");
 
@@ -37,7 +37,7 @@ pub fn render_value(value: &Value) -> String {
         Value::Map(map) => {
             let values = map
                 .iter()
-                .map(|(key, value)| format!("{}: {}", key, render_value(value)))
+                .map(|(key, value)| format!("{}: {}", key, render_sql_value(value)))
                 .collect::<Vec<_>>()
                 .join(", ");
 
@@ -46,7 +46,7 @@ pub fn render_value(value: &Value) -> String {
     }
 }
 
-pub fn render_csv(header: &[String], rows: &[gluesql::prelude::Row]) -> String {
+pub fn render_csv(header: &[String], rows: &Vec<Vec<String>>) -> String {
     let header = header
         .iter()
         .map(|header: &String| header.to_string())
@@ -55,14 +55,23 @@ pub fn render_csv(header: &[String], rows: &[gluesql::prelude::Row]) -> String {
 
     let rows = rows
         .iter()
-        .map(|row| row.iter().map(render_value).collect::<Vec<_>>().join(", "))
+        .map(|row| row.iter().map(|value| value.to_string()).join(", "))
         .collect::<Vec<_>>()
         .join("\n");
 
     format!("{}\n{}", header, rows)
 }
 
-pub fn render_table(header: &[String], rows: &[gluesql::prelude::Row]) -> String {
+pub fn render_csv_row(header: &[String], rows: &[gluesql::prelude::Row]) -> String {
+    let rows = rows
+        .iter()
+        .map(|row| row.iter().map(render_sql_value).collect::<Vec<_>>())
+        .collect::<Vec<_>>();
+
+    render_csv(header, &rows)
+}
+
+pub fn render_table(header: &[String], rows: &Vec<Vec<String>>) -> String {
     let mut table = Table::new();
 
     table.max_column_width = 40;
@@ -74,9 +83,18 @@ pub fn render_table(header: &[String], rows: &[gluesql::prelude::Row]) -> String
 
     for row in rows {
         table.add_row(Row::new(
-            row.iter().map(|value| TableCell::new(render_value(value))),
+            row.iter().map(|value| TableCell::new(value.as_str())),
         ));
     }
 
     table.render()
+}
+
+pub fn render_table_row(header: &[String], rows: &[gluesql::prelude::Row]) -> String {
+    let rows = rows
+        .iter()
+        .map(|row| row.iter().map(render_sql_value).collect::<Vec<_>>())
+        .collect::<Vec<_>>();
+
+    render_table(header, &rows)
 }
