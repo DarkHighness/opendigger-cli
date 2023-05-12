@@ -20,9 +20,9 @@ pub trait StorageStrategy: Debug {
         &mut self,
         sql: &str,
         statements: &[ast::Statement],
-    ) -> Result<(), StorageStrategyError>;
+    ) -> anyhow::Result<()>;
 
-    async fn fetch_all_schemas(&self) -> Result<Vec<Schema>, StorageStrategyError> {
+    async fn fetch_all_schemas(&self) -> anyhow::Result<Vec<Schema>> {
         Ok(vec![
             ACTIVITY_TABLE_SCHEMA.clone(),
             ATTENTION_TABLE_SCHEMA.clone(),
@@ -33,10 +33,8 @@ pub trait StorageStrategy: Debug {
     async fn fetch_table(
         &self,
         table_type: TableType,
-    ) -> Result<super::table::StorageTable, StorageStrategyError>;
+    ) -> anyhow::Result<super::table::StorageTable>;
 }
-
-pub type StorageStrategyError = Box<dyn std::error::Error>;
 
 #[derive(
     Debug, Clone, Copy, strum::EnumString, strum::AsRefStr, strum::IntoStaticStr, serde::Deserialize,
@@ -60,7 +58,7 @@ pub async fn create_strategy_instance(
     strategy: &StorageStrategyType,
     sql: &str,
     statements: &[ast::Statement],
-) -> Result<Box<dyn StorageStrategy>, StorageStrategyError> {
+) -> anyhow::Result<Box<dyn StorageStrategy>> {
     let mut instance = match strategy {
         StorageStrategyType::BruteForce => {
             Box::new(brute_force::BruteForceStoragePolicy::new()) as Box<dyn StorageStrategy>

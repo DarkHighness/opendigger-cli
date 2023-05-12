@@ -129,21 +129,25 @@ impl TableType {
 }
 
 impl TableEntry {
-    pub fn new(r#type: &str, owner: &str) -> Option<TableEntry> {
+    pub fn parse(r#type: &str, owner: &str) -> Option<TableEntry> {
         let table_type = TableType::from_str(r#type).ok()?;
         let table_owner = TableOwner::new(owner)?;
 
-        let table_metric = if table_owner.is_repository() && table_type.support_repository_table() {
-            table_type.as_repo_metric().unwrap()
-        } else if table_owner.is_user() && table_type.support_user_table() {
-            table_type.as_user_metric().unwrap()
+        Self::new(table_type, table_owner)
+    }
+
+    pub fn new(r#type: TableType, owner: TableOwner) -> Option<TableEntry> {
+        let table_metric = if owner.is_repository() && r#type.support_repository_table() {
+            r#type.as_repo_metric().unwrap()
+        } else if owner.is_user() && r#type.support_user_table() {
+            r#type.as_user_metric().unwrap()
         } else {
             return None;
         };
 
         Some(TableEntry {
-            r#type: table_type,
-            owner: table_owner,
+            r#type,
+            owner,
             metric: table_metric,
         })
     }

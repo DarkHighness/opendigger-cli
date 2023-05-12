@@ -61,24 +61,18 @@ impl Store for Storage {
     async fn scan_data(&self, table_name: &str) -> gluesql::core::result::Result<RowIter> {
         let table_type = TableType::from_str(table_name)
             .map_err(|err| gluesql::core::result::Error::StorageMsg(err.to_string()))?;
+        
+        let table = self.fetch_table(table_type).await
+            .map_err(|err| gluesql::core::result::Error::StorageMsg(err.to_string()))?
+            .map(|table| table.items().into_iter().map(|(key, row)| Ok((key, row))));
 
-        let mut tables = self.tables.lock().unwrap();
-
-        if !tables.contains_key(&table_type) {
-            let table = self
-                .strategy
-                .fetch_table(table_type)
-                .await
-                .map_err(|err| gluesql::core::result::Error::StorageMsg(err.to_string()))?;
-
-            tables.insert(table_type, table);
+        match table {
+            Some(table) => Ok(Box::new(table)),
+            None => Err(gluesql::core::result::Error::StorageMsg(format!(
+                "Table not found: {}",
+                table_name
+            ))),
         }
-
-        let table = tables.get(&table_type).unwrap();
-
-        Ok(Box::new(
-            table.items().into_iter().map(|(key, row)| Ok((key, row))),
-        ))
     }
 }
 

@@ -103,7 +103,7 @@ impl Analyzer {
             let table = self.lookup_alias(alias);
 
             if let Some(table) = table &&
-                let Some(entry) = TableEntry::new(table, owner){
+                let Some(entry) = TableEntry::parse(table, owner){
                     tracing::debug!("Found table entry: {:?}", entry);
 
                     self.entries.insert(entry);

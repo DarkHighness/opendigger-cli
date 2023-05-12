@@ -13,7 +13,7 @@ use gluesql::{
 };
 
 pub use openrank::{OPENRANK_TABLE_NAME, OPENRANK_TABLE_SCHEMA};
-pub use types::{TableEntry, TableType};
+pub use types::{TableEntry, TableOwner, TableType};
 
 #[derive(Debug)]
 pub struct InnerStorageTable {

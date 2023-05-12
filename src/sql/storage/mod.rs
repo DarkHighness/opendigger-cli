@@ -18,7 +18,7 @@ pub enum StorageError {
     #[error(transparent)]
     ApiError(#[from] crate::api::ApiError),
     #[error(transparent)]
-    StrategyError(#[from] crate::sql::strategy::StorageStrategyError),
+    StrategyError(#[from] anyhow::Error),
     #[error("Type is not supported: {0}{1}")]
     UnsupportedTableType(String, crate::api::Type),
 }
@@ -36,7 +36,7 @@ impl Storage {
     }
 
     pub async fn fetch_table(
-        &mut self,
+        &self,
         table_type: TableType,
     ) -> Result<Option<StorageTable>, StorageError> {
         let guard = self.tables.lock().unwrap();

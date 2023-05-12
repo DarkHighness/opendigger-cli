@@ -31,7 +31,7 @@ pub enum Commands {
         query: String,
         #[clap(short, long)]
         output_file: Option<String>,
-        #[clap(name = "strategy", default_value_t = StorageStrategyType::AnalyzeBased )]
+        #[clap(name = "strategy", default_value_t = StorageStrategyType::BruteForce )]
         strategy: StorageStrategyType,
     },
 }

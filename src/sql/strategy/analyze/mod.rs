@@ -3,7 +3,7 @@ use gluesql::core::ast;
 
 use crate::sql::{table::TableEntry, TableType};
 
-use super::{StorageStrategy, StorageStrategyError};
+use super::StorageStrategy;
 
 mod analyzer;
 
@@ -18,7 +18,7 @@ impl StorageStrategy for AnalyzeBasedStorageStrategy {
         &mut self,
         _query: &str,
         statements: &[ast::Statement],
-    ) -> Result<(), StorageStrategyError> {
+    ) -> anyhow::Result<()> {
         let analyzer = analyzer::Analyzer::new();
         let output = analyzer
             .analyze_statements(&statements)
@@ -32,7 +32,7 @@ impl StorageStrategy for AnalyzeBasedStorageStrategy {
     async fn fetch_table(
         &self,
         table_type: TableType,
-    ) -> Result<crate::sql::table::StorageTable, StorageStrategyError> {
+    ) -> anyhow::Result<crate::sql::table::StorageTable> {
         let entries = self.entries.as_ref().unwrap();
 
         let (tables, errors) = futures::future::join_all(
@@ -46,7 +46,7 @@ impl StorageStrategy for AnalyzeBasedStorageStrategy {
         .partition::<Vec<_>, _>(|result| result.is_ok());
 
         if !errors.is_empty() {
-            return Err(Box::new(errors.into_iter().next().unwrap().unwrap_err()));
+            anyhow::bail!("Failed to fetch data: {:?}", errors);
         }
 
         let tables = tables

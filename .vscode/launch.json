@@ -21,7 +21,7 @@
             },
             "args": [
                 "sql",
-                "select * from Openrank l left join Activity r on l.name = r.name where l.name = 'X-lab2017/open-digger'"
+                "select l.name, l.value as openrank, r.value as activity from Openrank l left join Activity r on l.name = r.name where (l.name = 'X-lab2017/open-digger' or l.name = 'frank-zsy') and l.time = r.time order by r.value desc"
             ],
             "cwd": "${workspaceFolder}"
         },
