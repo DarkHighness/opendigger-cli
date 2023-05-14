@@ -18,6 +18,7 @@ pub struct SqlQueryCommand {
     pub strategy: Box<dyn crate::sql::StorageStrategy>,
     pub statements: Vec<ast::Statement>,
     pub output_file: Option<String>,
+    pub ui_mode: crate::ui::UIMode,
 }
 
 impl Commands {
@@ -37,11 +38,13 @@ impl Commands {
         strategy: Box<dyn crate::sql::StorageStrategy>,
         statements: Vec<ast::Statement>,
         output_file: Option<String>,
+        ui_mode: crate::ui::UIMode,
     ) -> Commands {
         Self::SqlQueryCommand(SqlQueryCommand {
             strategy,
             statements,
             output_file,
+            ui_mode,
         })
     }
 }

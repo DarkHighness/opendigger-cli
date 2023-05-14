@@ -31,6 +31,8 @@ pub enum Commands {
         query: String,
         #[clap(short, long)]
         output_file: Option<String>,
+        #[clap(long, default_value_t = false)]
+        ui: bool,
         #[clap(name = "strategy", default_value_t = StorageStrategyType::BruteForce )]
         strategy: StorageStrategyType,
     },
@@ -104,6 +106,7 @@ pub async fn parse_command() -> crate::command::Commands {
             query,
             output_file,
             strategy,
+            ui,
         } => {
             let statements = gluesql::core::parse_sql::parse(&query);
 
@@ -139,8 +142,18 @@ pub async fn parse_command() -> crate::command::Commands {
             }
 
             let strategy = strategy.unwrap();
+            let ui_mode = if ui {
+                crate::ui::UIMode::Interactive
+            } else {
+                crate::ui::UIMode::Simple
+            };
 
-            crate::command::Commands::new_sql_query_command(strategy, statements, output_file)
+            crate::command::Commands::new_sql_query_command(
+                strategy,
+                statements,
+                output_file,
+                ui_mode,
+            )
         }
     }
 }

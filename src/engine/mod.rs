@@ -1,5 +1,6 @@
 use crate::command::Commands;
 use crate::sql::Storage;
+use crate::ui::{TableUI, UIMode};
 use gluesql::core::ast;
 use gluesql::prelude::Payload;
 use once_cell::sync::Lazy;
@@ -17,6 +18,8 @@ pub enum EngineExecutionError {
     StorageError(#[from] crate::sql::StorageError),
     #[error(transparent)]
     EngineError(#[from] Box<dyn std::error::Error + Send + Sync>),
+    #[error(transparent)]
+    UIError(#[from] crate::ui::UIError),
 }
 
 impl Engine {
@@ -45,6 +48,7 @@ impl Engine {
         statements: Vec<ast::Statement>,
         strategy: Box<dyn crate::sql::StorageStrategy>,
         output_file: Option<String>,
+        ui_mode: UIMode,
     ) -> Result<(), EngineExecutionError> {
         let storage = Storage::build_from_strategy(strategy).await?;
 
@@ -61,23 +65,44 @@ impl Engine {
 
             match payload {
                 Payload::Select { labels, rows } => {
+                    let rows = crate::ui::render_rows(&rows);
+
                     if let Some(output_file) = output_file.as_ref() {
-                        let output = crate::ui::render_csv_row(&labels, &rows);
+                        let output = crate::ui::render_csv(&labels, &rows);
                         tokio::fs::write(output_file, output).await?;
-                    } else {
-                        let output = crate::ui::render_table_row(&labels, &rows);
-                        println!("{}", output);
+
+                        tracing::info!("Output written to {}", output_file);
                     }
+
+                    let labels = labels
+                        .into_iter()
+                        .map(|label| {
+                            let mut chars = label.chars();
+                            match chars.next() {
+                                None => String::new(),
+                                Some(f) => f.to_uppercase().collect::<String>() + chars.as_str(),
+                            }
+                        })
+                        .collect::<Vec<_>>();
+
+                    let time = chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
+                    let title = format!(" Query Result: {} ", time);
+
+                    TableUI::new(ui_mode, title, labels, rows)?.run()?;
                 }
                 Payload::ShowColumns(columns) => {
-                    let output = crate::ui::render_table(
-                        &["column".to_string(), "type".to_string()],
-                        &columns
-                            .into_iter()
-                            .map(|(name, typ)| vec![name, typ.to_string()])
-                            .collect::<Vec<_>>(),
-                    );
-                    println!("{}", output);
+                    let rows = columns
+                        .into_iter()
+                        .map(|(name, typ)| vec![name, typ.to_string()])
+                        .collect::<Vec<_>>();
+
+                    TableUI::new(
+                        ui_mode,
+                        "Columns".to_string(),
+                        vec!["Column".to_string(), "Type".to_string()],
+                        rows,
+                    )?
+                    .run()?;
                 }
                 _ => {
                     tracing::error!("Invalid payload: {:?}", payload);
@@ -97,8 +122,13 @@ impl Engine {
                     .await?;
             }
             Commands::SqlQueryCommand(command) => {
-                self.execute_sql_query(command.statements, command.strategy, command.output_file)
-                    .await?;
+                self.execute_sql_query(
+                    command.statements,
+                    command.strategy,
+                    command.output_file,
+                    command.ui_mode,
+                )
+                .await?;
             }
         }
 
