@@ -9,7 +9,8 @@ use regex::Regex;
 use crate::api::Metric;
 
 use super::{
-    active_dates_and_times, bus_factor, change_request, code_change_lines, issue, new_contributors,
+    active_dates_and_times, bus_factor, change_request, code_change_lines, issue, network,
+    new_contributors,
 };
 
 #[derive(Debug, thiserror::Error)]
@@ -79,6 +80,8 @@ pub enum TableType {
     ChangeRequestResponseTime,
     ChangeRequestResolutionDuration,
     ChangeRequestAge,
+    RepoNetwork,
+    DeveloperNetwork,
 }
 
 impl Display for TableOwner {
@@ -172,7 +175,9 @@ impl TableType {
             | TableType::ChangeRequestsReviews
             | TableType::ChangeRequestResponseTime
             | TableType::ChangeRequestResolutionDuration
-            | TableType::ChangeRequestAge => true,
+            | TableType::ChangeRequestAge
+            | TableType::RepoNetwork
+            | TableType::DeveloperNetwork => true,
             _ => false,
         }
     }
@@ -248,6 +253,10 @@ impl TableType {
             TableType::ChangeRequestAge => {
                 Metric::Repo(crate::api::RepositoryMetric::ChangeRequestAge)
             }
+            TableType::RepoNetwork => Metric::Repo(crate::api::RepositoryMetric::RepoNetwork),
+            TableType::DeveloperNetwork => {
+                Metric::Repo(crate::api::RepositoryMetric::DeveloperNetwork)
+            }
             _ => return None,
         };
 
@@ -258,6 +267,8 @@ impl TableType {
         let metric = match self {
             TableType::OpenRank => Metric::User(crate::api::UserMetric::OpenRank),
             TableType::Activity => Metric::User(crate::api::UserMetric::Activity),
+            TableType::DeveloperNetwork => Metric::User(crate::api::UserMetric::DeveloperNetwork),
+            TableType::RepoNetwork => Metric::User(crate::api::UserMetric::RepoNetwork),
             _ => return None,
         };
 
@@ -356,6 +367,9 @@ impl TableEntry {
             | TableType::ChangeRequestResolutionDuration
             | TableType::ChangeRequestAge => {
                 change_request::fetch_detail_data(&self.owner, &self.metric).await
+            }
+            TableType::RepoNetwork | TableType::DeveloperNetwork => {
+                network::fetch_data(&self.owner, &self.metric).await
             }
         }
     }
