@@ -36,6 +36,14 @@ pub enum Commands {
         #[clap(name = "strategy", default_value_t = StorageStrategyType::BruteForce )]
         strategy: StorageStrategyType,
     },
+    #[clap(about = "Generate a report")]
+    #[clap(name = "report")]
+    Report {
+        #[clap(name = "owner")]
+        owner: String,
+        #[clap(name = "time")]
+        time: Option<String>,
+    },
 }
 
 fn unknown_metric_type_error(r#type: crate::api::Type, metric_type: &str) -> ! {
@@ -154,6 +162,9 @@ pub async fn parse_command() -> crate::command::Commands {
                 output_file,
                 ui_mode,
             )
+        }
+        Commands::Report { owner, time } => {
+            crate::command::Commands::new_report_command(owner, time)
         }
     }
 }

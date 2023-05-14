@@ -4,6 +4,7 @@ use gluesql::core::ast;
 pub enum Commands {
     DownloadCommand(DownloadCommand),
     SqlQueryCommand(SqlQueryCommand),
+    ReportCommand(ReportCommand),
 }
 
 #[derive(Debug)]
@@ -19,6 +20,12 @@ pub struct SqlQueryCommand {
     pub statements: Vec<ast::Statement>,
     pub output_file: Option<String>,
     pub ui_mode: crate::ui::UIMode,
+}
+
+#[derive(Debug)]
+pub struct ReportCommand {
+    pub owner: String,
+    pub time: Option<String>,
 }
 
 impl Commands {
@@ -46,5 +53,9 @@ impl Commands {
             output_file,
             ui_mode,
         })
+    }
+
+    pub fn new_report_command(owner: String, time: Option<String>) -> Commands {
+        Self::ReportCommand(ReportCommand { owner, time })
     }
 }

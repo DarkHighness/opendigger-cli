@@ -1959,6 +1959,7 @@ dependencies = [
  "gluesql",
  "http",
  "itertools",
+ "lazy_static",
  "once_cell",
  "quick_cache",
  "regex",

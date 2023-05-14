@@ -5,3 +5,5 @@ pub use table::TableType;
 mod storage;
 mod strategy;
 mod table;
+
+pub use table::ALL_SCHEMAS;

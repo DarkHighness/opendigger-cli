@@ -14,6 +14,7 @@ pub enum Type {
 pub enum Metric {
     Repo(RepositoryMetric),
     User(UserMetric),
+    Custom,
 }
 
 #[derive(
@@ -57,8 +58,8 @@ pub enum RepositoryMetric {
     CodeChangeLinesRemove,
     CodeChangeLinesSum,
     ChangeRequests,
-    ChangeRequestAccepted,
-    ChangeRequestReviews,
+    ChangeRequestsAccepted,
+    ChangeRequestsReviews,
     ChangeRequestResponseTime,
     ChangeRequestResolutionDuration,
     ChangeRequestAge,
@@ -96,6 +97,7 @@ impl AsRef<str> for Metric {
         match self {
             Metric::Repo(metric) => metric.as_ref(),
             Metric::User(metric) => metric.as_ref(),
+            Metric::Custom => "custom",
         }
     }
 }

@@ -74,17 +74,6 @@ impl Engine {
                         tracing::info!("Output written to {}", output_file);
                     }
 
-                    let labels = labels
-                        .into_iter()
-                        .map(|label| {
-                            let mut chars = label.chars();
-                            match chars.next() {
-                                None => String::new(),
-                                Some(f) => f.to_uppercase().collect::<String>() + chars.as_str(),
-                            }
-                        })
-                        .collect::<Vec<_>>();
-
                     let time = chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
                     let title = format!(" Query Result: {} ", time);
 
@@ -129,6 +118,9 @@ impl Engine {
                     command.ui_mode,
                 )
                 .await?;
+            }
+            Commands::ReportCommand(_command) => {
+                unimplemented!("Report command not implemented yet")
             }
         }
 

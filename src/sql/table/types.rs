@@ -8,6 +8,10 @@ use regex::Regex;
 
 use crate::api::Metric;
 
+use super::{
+    active_dates_and_times, bus_factor, change_request, code_change_lines, issue, new_contributors,
+};
+
 #[derive(Debug, thiserror::Error)]
 pub enum DataFetchError {
     #[error(transparent)]
@@ -49,6 +53,32 @@ pub enum TableType {
     Activity,
     Attention,
     ActiveDatesAndTimes,
+    Stars,
+    TechnicalFork,
+    Participants,
+    NewContributors,
+    NewContributorsDetail,
+    InactiveContributors,
+    BusFactor,
+    BusFactorDetail,
+    Issues,
+    IssuesNew,
+    IssuesClosed,
+    IssueComments,
+    IssueResponseTime,
+    IssueResolutionDuration,
+    IssueAge,
+    CodeChangeLines,
+    CodeChangeLinesAdd,
+    CodeChangeLinesRemove,
+    CodeChangeLinesSum,
+    ChangeRequests,
+    ChangeRequestsOpen,
+    ChangeRequestsAccepted,
+    ChangeRequestsReviews,
+    ChangeRequestResponseTime,
+    ChangeRequestResolutionDuration,
+    ChangeRequestAge,
 }
 
 impl Display for TableOwner {
@@ -116,7 +146,33 @@ impl TableType {
             TableType::OpenRank
             | TableType::Activity
             | TableType::Attention
-            | TableType::ActiveDatesAndTimes => true,
+            | TableType::ActiveDatesAndTimes
+            | TableType::Stars
+            | TableType::TechnicalFork
+            | TableType::Participants
+            | TableType::NewContributors
+            | TableType::NewContributorsDetail
+            | TableType::InactiveContributors
+            | TableType::BusFactor
+            | TableType::BusFactorDetail
+            | TableType::Issues
+            | TableType::IssuesNew
+            | TableType::IssuesClosed
+            | TableType::IssueComments
+            | TableType::IssueResponseTime
+            | TableType::IssueResolutionDuration
+            | TableType::IssueAge
+            | TableType::CodeChangeLines
+            | TableType::CodeChangeLinesAdd
+            | TableType::CodeChangeLinesRemove
+            | TableType::CodeChangeLinesSum
+            | TableType::ChangeRequests
+            | TableType::ChangeRequestsOpen
+            | TableType::ChangeRequestsAccepted
+            | TableType::ChangeRequestsReviews
+            | TableType::ChangeRequestResponseTime
+            | TableType::ChangeRequestResolutionDuration
+            | TableType::ChangeRequestAge => true,
             _ => false,
         }
     }
@@ -135,6 +191,62 @@ impl TableType {
             TableType::Attention => Metric::Repo(crate::api::RepositoryMetric::Attention),
             TableType::ActiveDatesAndTimes => {
                 Metric::Repo(crate::api::RepositoryMetric::ActiveDatesAndTimes)
+            }
+            TableType::Stars => Metric::Repo(crate::api::RepositoryMetric::Stars),
+            TableType::TechnicalFork => Metric::Repo(crate::api::RepositoryMetric::TechnicalFork),
+            TableType::Participants => Metric::Repo(crate::api::RepositoryMetric::Participants),
+            TableType::NewContributors => {
+                Metric::Repo(crate::api::RepositoryMetric::NewContributors)
+            }
+            TableType::NewContributorsDetail => {
+                Metric::Repo(crate::api::RepositoryMetric::NewContributorsDetail)
+            }
+            TableType::InactiveContributors => {
+                Metric::Repo(crate::api::RepositoryMetric::InactiveContributors)
+            }
+            TableType::BusFactor => Metric::Repo(crate::api::RepositoryMetric::BusFactor),
+            TableType::BusFactorDetail => {
+                Metric::Repo(crate::api::RepositoryMetric::BusFactorDetail)
+            }
+            TableType::Issues => Metric::Custom,
+            TableType::IssuesNew => Metric::Repo(crate::api::RepositoryMetric::IssuesNew),
+            TableType::IssuesClosed => Metric::Repo(crate::api::RepositoryMetric::IssuesClosed),
+            TableType::IssueComments => Metric::Repo(crate::api::RepositoryMetric::IssueComments),
+            TableType::IssueResponseTime => {
+                Metric::Repo(crate::api::RepositoryMetric::IssueResponseTime)
+            }
+            TableType::IssueResolutionDuration => {
+                Metric::Repo(crate::api::RepositoryMetric::IssueResolutionDuration)
+            }
+            TableType::IssueAge => Metric::Repo(crate::api::RepositoryMetric::IssueAge),
+            TableType::CodeChangeLines => Metric::Custom,
+            TableType::CodeChangeLinesAdd => {
+                Metric::Repo(crate::api::RepositoryMetric::CodeChangeLinesAdd)
+            }
+            TableType::CodeChangeLinesRemove => {
+                Metric::Repo(crate::api::RepositoryMetric::CodeChangeLinesRemove)
+            }
+            TableType::CodeChangeLinesSum => {
+                Metric::Repo(crate::api::RepositoryMetric::CodeChangeLinesSum)
+            }
+            TableType::ChangeRequests => Metric::Custom,
+            TableType::ChangeRequestsOpen => {
+                Metric::Repo(crate::api::RepositoryMetric::ChangeRequests)
+            }
+            TableType::ChangeRequestsAccepted => {
+                Metric::Repo(crate::api::RepositoryMetric::ChangeRequestsAccepted)
+            }
+            TableType::ChangeRequestsReviews => {
+                Metric::Repo(crate::api::RepositoryMetric::ChangeRequestsReviews)
+            }
+            TableType::ChangeRequestResponseTime => {
+                Metric::Repo(crate::api::RepositoryMetric::ChangeRequestResponseTime)
+            }
+            TableType::ChangeRequestResolutionDuration => {
+                Metric::Repo(crate::api::RepositoryMetric::ChangeRequestResolutionDuration)
+            }
+            TableType::ChangeRequestAge => {
+                Metric::Repo(crate::api::RepositoryMetric::ChangeRequestAge)
             }
             _ => return None,
         };
@@ -167,6 +279,12 @@ impl TableEntry {
         } else if owner.is_user() && r#type.support_user_table() {
             r#type.as_user_metric().unwrap()
         } else {
+            tracing::warn!(
+                "Invalid table type: {} for owner: {}",
+                r#type,
+                owner.to_string()
+            );
+
             return None;
         };
 
@@ -199,11 +317,45 @@ impl TableEntry {
 
     pub async fn fetch_data(&self) -> Result<Vec<(Key, Row)>, DataFetchError> {
         match self.r#type {
-            TableType::OpenRank | TableType::Activity | TableType::Attention => {
+            TableType::OpenRank
+            | TableType::Activity
+            | TableType::Attention
+            | TableType::Stars
+            | TableType::TechnicalFork
+            | TableType::Participants
+            | TableType::NewContributors
+            | TableType::InactiveContributors
+            | TableType::BusFactor
+            | TableType::IssuesNew
+            | TableType::IssuesClosed
+            | TableType::IssueComments
+            | TableType::CodeChangeLinesAdd
+            | TableType::CodeChangeLinesRemove
+            | TableType::CodeChangeLinesSum
+            | TableType::ChangeRequestsOpen
+            | TableType::ChangeRequestsAccepted
+            | TableType::ChangeRequestsReviews => {
                 common_fetch_data(&self.owner, &self.metric).await
             }
             TableType::ActiveDatesAndTimes => {
-                unimplemented!()
+                active_dates_and_times::fetch_data(&self.owner, &self.metric).await
+            }
+            TableType::NewContributorsDetail => {
+                new_contributors::fetch_detail_data(&self.owner, &self.metric).await
+            }
+            TableType::BusFactorDetail => {
+                bus_factor::fetch_detail_data(&self.owner, &self.metric).await
+            }
+            TableType::Issues => issue::fetch_data(&self.owner).await,
+            TableType::IssueResponseTime
+            | TableType::IssueResolutionDuration
+            | TableType::IssueAge => issue::fetch_detail_data(&self.owner, &self.metric).await,
+            TableType::CodeChangeLines => code_change_lines::fetch_data(&self.owner).await,
+            TableType::ChangeRequests => change_request::fetch_data(&self.owner).await,
+            TableType::ChangeRequestResponseTime
+            | TableType::ChangeRequestResolutionDuration
+            | TableType::ChangeRequestAge => {
+                change_request::fetch_detail_data(&self.owner, &self.metric).await
             }
         }
     }
@@ -226,14 +378,14 @@ async fn common_fetch_data(
 
     let items = data
         .iter()
-        .map(|(time, value)| {
+        .map(|(month, value)| {
             let row = Row(vec![
                 Value::Str(owner.to_string()),
-                Value::Str(time.clone()),
-                Value::F64(*value),
+                Value::Str(month.clone()),
+                Value::F64(value.clone()),
             ]);
 
-            let key = Key::Str(time.clone());
+            let key = Key::Str(month.clone());
 
             (key, row)
         })

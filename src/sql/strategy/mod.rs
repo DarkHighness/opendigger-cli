@@ -5,10 +5,6 @@ use async_trait::async_trait;
 use gluesql::core::ast;
 use gluesql::core::data::Schema;
 
-use crate::sql::table::ACTIVITY_TABLE_SCHEMA;
-use crate::sql::table::ATTENTION_TABLE_SCHEMA;
-use crate::sql::table::OPENRANK_TABLE_SCHEMA;
-
 use super::TableType;
 
 mod analyze;
@@ -23,11 +19,7 @@ pub trait StorageStrategy: Debug {
     ) -> anyhow::Result<()>;
 
     async fn fetch_all_schemas(&self) -> anyhow::Result<Vec<Schema>> {
-        Ok(vec![
-            ACTIVITY_TABLE_SCHEMA.clone(),
-            ATTENTION_TABLE_SCHEMA.clone(),
-            OPENRANK_TABLE_SCHEMA.clone(),
-        ])
+        Ok(super::ALL_SCHEMAS.clone())
     }
 
     async fn fetch_table(

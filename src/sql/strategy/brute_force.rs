@@ -5,12 +5,9 @@ use gluesql::core::ast;
 use once_cell::sync::Lazy;
 use regex::Regex;
 
-use crate::{
-    api::ApiError,
-    sql::{
-        table::{DataFetchError, TableEntry, TableOwner},
-        TableType,
-    },
+use crate::sql::{
+    table::{DataFetchError, TableEntry, TableOwner},
+    TableType,
 };
 
 use super::StorageStrategy;
