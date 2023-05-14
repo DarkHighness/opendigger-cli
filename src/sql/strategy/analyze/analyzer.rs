@@ -233,14 +233,11 @@ impl Analyzer {
         statements: &[ast::Statement],
     ) -> Result<AnalysisOutput, AnalyzeError> {
         for statement in statements {
-            match statement {
-                ast::Statement::Query(query) => {
-                    tracing::debug!("Analyze query: {:?}", query);
+            if let ast::Statement::Query(query) = statement {
+                tracing::debug!("Analyze query: {:?}", query);
 
-                    self.collect_tables_and_alias(&query.body)?;
-                    self.analyze_query(query)?;
-                }
-                _ => {}
+                self.collect_tables_and_alias(&query.body)?;
+                self.analyze_query(query)?;
             }
         }
 

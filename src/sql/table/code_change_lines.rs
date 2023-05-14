@@ -5,14 +5,12 @@ use gluesql::core::data::Schema;
 use gluesql::prelude::{DataType, Key, Row, Value};
 use lazy_static::lazy_static;
 
-use crate::api::Metric;
+use super::{DataError, TableOwner};
 
-use super::{DataFetchError, TableOwner};
-
-pub static CODE_CHANGE_LINES_TABLE_NAME: &'static str = "CodeChangeLines";
-pub static CODE_CHANGE_LINES_ADD_TABLE_NAME: &'static str = "CodeChangeLinesAdd";
-pub static CODE_CHANGE_LINES_REMOVE_TABLE_NAME: &'static str = "CodeChangeLinesRemove";
-pub static CODE_CHANGE_LINES_SUM_TABLE_NAME: &'static str = "CodeChangeLinesSum";
+pub static CODE_CHANGE_LINES_TABLE_NAME: &str = "CodeChangeLines";
+pub static CODE_CHANGE_LINES_ADD_TABLE_NAME: &str = "CodeChangeLinesAdd";
+pub static CODE_CHANGE_LINES_REMOVE_TABLE_NAME: &str = "CodeChangeLinesRemove";
+pub static CODE_CHANGE_LINES_SUM_TABLE_NAME: &str = "CodeChangeLinesSum";
 
 lazy_static! {
     pub static ref CODE_CHANGE_LINE_TABLE_SCHEMA: Schema = Schema {
@@ -111,22 +109,23 @@ lazy_static! {
     };
 }
 
-pub(crate) async fn fetch_data(owner: &TableOwner) -> Result<Vec<(Key, Row)>, DataFetchError> {
+pub(crate) async fn fetch_combined_data(owner: &TableOwner) -> Result<Vec<(Key, Row)>, DataError> {
     let api = crate::api::get();
+    let owner = owner.to_string();
 
     let (code_change_lines_add, code_change_lines_remove, code_change_lines_sum) =
         futures::future::join3(
             api.get::<BTreeMap<String, i64>>(
-                owner.to_string().as_str(),
-                Metric::Repo(crate::api::RepositoryMetric::CodeChangeLinesAdd),
+                owner.as_str(),
+                crate::api::RepositoryMetric::CodeChangeLinesAdd.into(),
             ),
             api.get::<BTreeMap<String, i64>>(
-                owner.to_string().as_str(),
-                Metric::Repo(crate::api::RepositoryMetric::CodeChangeLinesRemove),
+                owner.as_str(),
+                crate::api::RepositoryMetric::CodeChangeLinesRemove.into(),
             ),
             api.get::<BTreeMap<String, i64>>(
-                owner.to_string().as_str(),
-                Metric::Repo(crate::api::RepositoryMetric::CodeChangeLinesSum),
+                owner.as_str(),
+                crate::api::RepositoryMetric::CodeChangeLinesSum.into(),
             ),
         )
         .await;
@@ -138,17 +137,17 @@ pub(crate) async fn fetch_data(owner: &TableOwner) -> Result<Vec<(Key, Row)>, Da
     ) {
         (Ok(code_changes_line_add), Ok(code_changes_line_remove), Ok(code_changes_line_sum)) => {
             let items = code_changes_line_add
-                .iter()
+                .into_iter()
                 .map(|(month, value)| {
-                    let remove = code_changes_line_remove.get(month).unwrap_or(&0);
-                    let sum = code_changes_line_sum.get(month).unwrap_or(&0);
+                    let remove = code_changes_line_remove.get(&month).unwrap_or(&0);
+                    let sum = code_changes_line_sum.get(&month).unwrap_or(&0);
 
                     let row = Row(vec![
                         Value::Str(owner.to_string()),
                         Value::Str(month.clone()),
-                        Value::I64(value.clone()),
-                        Value::I64(remove.clone()),
-                        Value::I64(sum.clone()),
+                        Value::I64(value),
+                        Value::I64(*remove),
+                        Value::I64(*sum),
                     ]);
 
                     let key = Key::Str(owner.to_string());

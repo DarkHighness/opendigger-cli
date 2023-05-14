@@ -32,7 +32,7 @@ pub use openrank::{OPENRANK_TABLE_NAME, OPENRANK_TABLE_SCHEMA};
 pub use stars::{STARS_TABLE_NAME, STARS_TABLE_SCHEMA};
 pub use technical_fork::{TECHNICAL_FORK_TABLE_NAME, TECHNICAL_FORK_TABLE_SCHEMA};
 
-pub use types::{DataFetchError, TableEntry, TableOwner, TableType};
+pub use types::{DataError, TableEntry, TableOwner, TableType};
 
 pub use bus_factor::{
     BUS_FACTOR_DETAIL_TABLE_NAME, BUS_FACTOR_DETAIL_TABLE_SCHEMA, BUS_FACTOR_TABLE_NAME,
@@ -110,6 +110,7 @@ lazy_static! {
     ];
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct InnerStorageTable {
     r#type: TableType,

@@ -3,7 +3,7 @@ use gluesql::core::data::Schema;
 use gluesql::prelude::DataType;
 use lazy_static::lazy_static;
 
-pub static PARTICIPANTS_TABLE_NAME: &'static str = "Participants";
+pub static PARTICIPANTS_TABLE_NAME: &str = "Participants";
 
 lazy_static! {
     pub static ref PARTICIPANTS_TABLE_SCHEMA: Schema = Schema {

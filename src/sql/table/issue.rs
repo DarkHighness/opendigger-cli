@@ -7,15 +7,15 @@ use lazy_static::lazy_static;
 
 use crate::api::Metric;
 
-use super::{DataFetchError, TableOwner};
+use super::{DataError, TableOwner};
 
-pub static ISSUES_TABLE_NAME: &'static str = "Issues";
-pub static ISSUES_NEW_TABLE_NAME: &'static str = "IssuesNew";
-pub static ISSUES_CLOSED_TABLE_NAME: &'static str = "IssuesClosed";
-pub static ISSUE_COMMENTS_TABLE_NAME: &'static str = "IssueComments";
-pub static ISSUE_RESPONSE_TIME_TABLE_NAME: &'static str = "IssueResponseTime";
-pub static ISSUE_RESOLUTION_DURATION_TABLE_NAME: &'static str = "IssueResolutionDuration";
-pub static ISSUE_AGE_TABLE_NAME: &'static str = "IssueAge";
+pub static ISSUES_TABLE_NAME: &str = "Issues";
+pub static ISSUES_NEW_TABLE_NAME: &str = "IssuesNew";
+pub static ISSUES_CLOSED_TABLE_NAME: &str = "IssuesClosed";
+pub static ISSUE_COMMENTS_TABLE_NAME: &str = "IssueComments";
+pub static ISSUE_RESPONSE_TIME_TABLE_NAME: &str = "IssueResponseTime";
+pub static ISSUE_RESOLUTION_DURATION_TABLE_NAME: &str = "IssueResolutionDuration";
+pub static ISSUE_AGE_TABLE_NAME: &str = "IssueAge";
 
 lazy_static! {
     pub static ref ISSUES_TABLE_SCHEMA: Schema = Schema {
@@ -252,6 +252,7 @@ lazy_static! {
     };
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, serde::Deserialize)]
 struct Response {
     avg: BTreeMap<String, f64>,
@@ -266,16 +267,15 @@ struct Response {
 pub(crate) async fn fetch_detail_data(
     owner: &TableOwner,
     metric: &Metric,
-) -> Result<Vec<(Key, Row)>, DataFetchError> {
+) -> Result<Vec<(Key, Row)>, DataError> {
     let api = crate::api::get();
     let data = api
-        .get::<Response>(owner.to_string().as_str(), metric.clone())
+        .get::<Response>(owner.to_string().as_str(), *metric)
         .await?;
 
     let items = data
         .avg
         .keys()
-        .into_iter()
         .map(|key| {
             let avg = data.avg.get(key).unwrap();
             let q0 = data.quantile_0.get(key).unwrap();
@@ -304,21 +304,22 @@ pub(crate) async fn fetch_detail_data(
     Ok(items)
 }
 
-pub(crate) async fn fetch_data(owner: &TableOwner) -> Result<Vec<(Key, Row)>, DataFetchError> {
+pub(crate) async fn fetch_combined_data(owner: &TableOwner) -> Result<Vec<(Key, Row)>, DataError> {
     let api = crate::api::get();
+    let owner = owner.to_string();
 
     let (data_new, data_closed, data_comments) = futures::future::join3(
         api.get::<BTreeMap<String, i64>>(
-            owner.to_string().as_str(),
-            Metric::Repo(crate::api::RepositoryMetric::IssuesNew),
+            owner.as_str(),
+            crate::api::RepositoryMetric::IssuesNew.into(),
         ),
         api.get::<BTreeMap<String, i64>>(
-            owner.to_string().as_str(),
-            Metric::Repo(crate::api::RepositoryMetric::IssuesClosed),
+            owner.as_str(),
+            crate::api::RepositoryMetric::IssuesClosed.into(),
         ),
         api.get::<BTreeMap<String, i64>>(
-            owner.to_string().as_str(),
-            Metric::Repo(crate::api::RepositoryMetric::IssueComments),
+            owner.as_str(),
+            crate::api::RepositoryMetric::IssueComments.into(),
         ),
     )
     .await;
@@ -326,17 +327,17 @@ pub(crate) async fn fetch_data(owner: &TableOwner) -> Result<Vec<(Key, Row)>, Da
     match (data_new, data_closed, data_comments) {
         (Ok(data_new), Ok(data_closed), Ok(data_comments)) => {
             let items = data_new
-                .iter()
+                .into_iter()
                 .map(|(month, value)| {
-                    let closed = data_closed.get(month).unwrap_or(&0);
-                    let comments = data_comments.get(month).unwrap_or(&0);
+                    let closed = data_closed.get(&month).cloned().unwrap_or(0);
+                    let comments = data_comments.get(&month).cloned().unwrap_or(0);
 
                     let row = Row(vec![
                         Value::Str(owner.to_string()),
-                        Value::Str(month.clone()),
-                        Value::I64(value.clone()),
-                        Value::I64(closed.clone()),
-                        Value::I64(comments.clone()),
+                        Value::Str(month),
+                        Value::I64(value),
+                        Value::I64(closed),
+                        Value::I64(comments),
                     ]);
 
                     let key = Key::Str(owner.to_string());

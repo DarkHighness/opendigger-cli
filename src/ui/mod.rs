@@ -2,8 +2,8 @@ mod report;
 mod table;
 mod util;
 
+pub use report::RepoOverviewUI;
 pub use table::TableUI;
-pub use report::{RepoOverviewUI};
 pub use util::{render_csv, render_rows, render_table};
 
 #[derive(Debug, Clone, Copy)]

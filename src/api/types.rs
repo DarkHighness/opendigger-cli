@@ -132,7 +132,6 @@ impl RepositoryMetric {
     }
 }
 
-
 impl UserMetric {
     pub fn available_types() -> Vec<&'static str> {
         UserMetric::iter().map(|t| t.into()).collect::<Vec<_>>()

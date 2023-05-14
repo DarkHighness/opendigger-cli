@@ -2,9 +2,9 @@ use gluesql::core::ast;
 
 #[derive(Debug)]
 pub enum Commands {
-    DownloadCommand(DownloadCommand),
-    SqlQueryCommand(SqlQueryCommand),
-    ReportCommand(ReportCommand),
+    Download(DownloadCommand),
+    SqlQuery(SqlQueryCommand),
+    Report(ReportCommand),
 }
 
 #[derive(Debug)]
@@ -34,7 +34,7 @@ impl Commands {
         metric: crate::api::Metric,
         output_file: Option<String>,
     ) -> Commands {
-        Self::DownloadCommand(DownloadCommand {
+        Self::Download(DownloadCommand {
             name,
             metric,
             output_file,
@@ -47,7 +47,7 @@ impl Commands {
         output_file: Option<String>,
         ui_mode: crate::ui::UIMode,
     ) -> Commands {
-        Self::SqlQueryCommand(SqlQueryCommand {
+        Self::SqlQuery(SqlQueryCommand {
             strategy,
             statements,
             output_file,
@@ -56,6 +56,6 @@ impl Commands {
     }
 
     pub fn new_report_command(owner: String, time: Option<String>) -> Commands {
-        Self::ReportCommand(ReportCommand { owner, time })
+        Self::Report(ReportCommand { owner, time })
     }
 }

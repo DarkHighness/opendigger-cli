@@ -30,8 +30,7 @@ impl Store for Storage {
 
         let schema = schema
             .into_iter()
-            .find(|schema| schema.table_name == table_name)
-            .map(|schema| schema.clone());
+            .find(|schema| schema.table_name == table_name);
 
         Ok(schema)
     }

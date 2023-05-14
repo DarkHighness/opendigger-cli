@@ -15,17 +15,17 @@ pub struct Engine {}
 #[derive(Debug, thiserror::Error)]
 pub enum EngineExecutionError {
     #[error(transparent)]
-    ApiError(#[from] crate::api::ApiError),
+    Api(#[from] crate::api::ApiError),
     #[error(transparent)]
-    IoError(#[from] std::io::Error),
+    Io(#[from] std::io::Error),
     #[error(transparent)]
-    StorageError(#[from] crate::sql::StorageError),
+    Storage(#[from] crate::sql::StorageError),
     #[error(transparent)]
-    EngineError(#[from] Box<dyn std::error::Error + Send + Sync>),
+    Engine(#[from] Box<dyn std::error::Error + Send + Sync>),
     #[error(transparent)]
-    UIError(#[from] crate::ui::UIError),
+    UI(#[from] crate::ui::UIError),
     #[error(transparent)]
-    ReportError(#[from] crate::report::ReportError),
+    Report(#[from] crate::report::ReportError),
 }
 
 impl Engine {
@@ -65,7 +65,7 @@ impl Engine {
         for statement in statements {
             let payload = engine
                 .execute_stmt(&statement)
-                .map_err(|e| EngineExecutionError::EngineError(Box::new(e)))?;
+                .map_err(|e| EngineExecutionError::Engine(Box::new(e)))?;
 
             tracing::debug!("Payload: {:?}", payload);
 
@@ -112,11 +112,11 @@ impl Engine {
         tracing::debug!("Executing command: {:?}", command);
 
         match command {
-            Commands::DownloadCommand(command) => {
+            Commands::Download(command) => {
                 self.download_data(&command.name, command.metric, command.output_file)
                     .await?;
             }
-            Commands::SqlQueryCommand(command) => {
+            Commands::SqlQuery(command) => {
                 self.execute_sql_query(
                     command.statements,
                     command.strategy,
@@ -125,9 +125,9 @@ impl Engine {
                 )
                 .await?;
             }
-            Commands::ReportCommand(command) => {
+            Commands::Report(command) => {
                 let owner = command.owner;
-                if owner.contains("/") {
+                if owner.contains('/') {
                     let mut report = crate::report::ReporOverview::new(owner);
                     report.generate_report().await?;
 

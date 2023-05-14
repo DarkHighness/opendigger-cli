@@ -10,17 +10,15 @@ mod transaction;
 #[derive(Debug)]
 pub struct Storage {
     strategy: Box<dyn crate::sql::StorageStrategy>,
-    tables: std::sync::Mutex<HashMap<TableType, StorageTable>>,
+    tables: tokio::sync::Mutex<HashMap<TableType, StorageTable>>,
 }
 
 #[derive(Debug, thiserror::Error)]
 pub enum StorageError {
     #[error(transparent)]
-    ApiError(#[from] crate::api::ApiError),
+    Api(#[from] crate::api::ApiError),
     #[error(transparent)]
-    StrategyError(#[from] anyhow::Error),
-    #[error("Type is not supported: {0}{1}")]
-    UnsupportedTableType(String, crate::api::Type),
+    Storage(#[from] anyhow::Error),
 }
 
 impl Storage {
@@ -39,7 +37,7 @@ impl Storage {
         &self,
         table_type: TableType,
     ) -> Result<Option<StorageTable>, StorageError> {
-        let guard = self.tables.lock().unwrap();
+        let guard = self.tables.lock().await;
 
         if guard.contains_key(&table_type) {
             return Ok(guard.get(&table_type).cloned());
@@ -51,9 +49,9 @@ impl Storage {
             .strategy
             .fetch_table(table_type)
             .await
-            .map_err(|err| StorageError::StrategyError(err))?;
+            .map_err(StorageError::Storage)?;
 
-        let mut guard = self.tables.lock().unwrap();
+        let mut guard = self.tables.lock().await;
 
         guard.insert(table_type, table);
 

@@ -20,9 +20,7 @@ impl StorageStrategy for AnalyzeBasedStorageStrategy {
         statements: &[ast::Statement],
     ) -> anyhow::Result<()> {
         let analyzer = analyzer::Analyzer::new();
-        let output = analyzer
-            .analyze_statements(&statements)
-            .map_err(|err| Box::new(err))?;
+        let output = analyzer.analyze_statements(statements).map_err(Box::new)?;
 
         self.entries = Some(output.tables);
 
@@ -51,8 +49,7 @@ impl StorageStrategy for AnalyzeBasedStorageStrategy {
 
         let tables = tables
             .into_iter()
-            .map(|result| result.unwrap())
-            .flatten()
+            .flat_map(|result| result.unwrap())
             .collect();
 
         Ok(crate::sql::table::StorageTable::new(table_type, tables))

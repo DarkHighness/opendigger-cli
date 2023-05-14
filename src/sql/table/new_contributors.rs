@@ -7,10 +7,10 @@ use lazy_static::lazy_static;
 
 use crate::api::Metric;
 
-use super::{DataFetchError, TableOwner};
+use super::{DataError, TableOwner};
 
-pub static NEW_CONTRIBUTORS_TABLE_NAME: &'static str = "NewContributors";
-pub static NEW_CONTRIBUTORS_DETAIL_TABLE_NAME: &'static str = "NewContributorsDetail";
+pub static NEW_CONTRIBUTORS_TABLE_NAME: &str = "NewContributors";
+pub static NEW_CONTRIBUTORS_DETAIL_TABLE_NAME: &str = "NewContributorsDetail";
 
 lazy_static! {
     pub static ref NEW_CONTRIBUTORS_TABLE_SCHEMA: Schema = Schema {
@@ -60,14 +60,14 @@ lazy_static! {
 pub(crate) async fn fetch_detail_data(
     owner: &TableOwner,
     metric: &Metric,
-) -> Result<Vec<(Key, Row)>, DataFetchError> {
+) -> Result<Vec<(Key, Row)>, DataError> {
     let api = crate::api::get();
     let data = api
-        .get::<BTreeMap<String, Vec<String>>>(owner.to_string().as_str(), metric.clone())
+        .get::<BTreeMap<String, Vec<String>>>(owner.to_string().as_str(), *metric)
         .await?;
 
     let items = data
-        .iter()
+        .into_iter()
         .flat_map(|(month, value)| {
             value
                 .into_iter()
@@ -75,7 +75,7 @@ pub(crate) async fn fetch_detail_data(
                     let row = Row(vec![
                         Value::Str(owner.to_string()),
                         Value::Str(month.clone()),
-                        Value::Str(user.clone()),
+                        Value::Str(user),
                     ]);
 
                     let key = Key::Str(owner.to_string());

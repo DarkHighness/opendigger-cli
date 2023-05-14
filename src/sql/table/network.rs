@@ -8,8 +8,8 @@ use lazy_static::lazy_static;
 
 use super::TableOwner;
 
-pub static REPO_NETWORK_TABLE_NAME: &'static str = "RepoNetwork";
-pub static DEVELOPER_NETWORK_TABLE_NAME: &'static str = "DeveloperNetwork";
+pub static REPO_NETWORK_TABLE_NAME: &str = "RepoNetwork";
+pub static DEVELOPER_NETWORK_TABLE_NAME: &str = "DeveloperNetwork";
 
 lazy_static! {
     pub static ref REPO_NETWORK_TABLE_SCHEMA: Schema = Schema {
@@ -92,36 +92,31 @@ struct Network {
     edges: Vec<(String, String, f64)>,
 }
 
-pub(crate) async fn fetch_data(
+pub(crate) async fn fetch_network_data(
     owner: &TableOwner,
     metric: &Metric,
-) -> Result<Vec<(gluesql::prelude::Key, gluesql::prelude::Row)>, crate::sql::table::DataFetchError>
-{
+) -> Result<Vec<(gluesql::prelude::Key, gluesql::prelude::Row)>, crate::sql::table::DataError> {
     let api = crate::api::get();
     let data = api
-        .get::<Network>(owner.to_string().as_str(), metric.clone())
+        .get::<Network>(owner.to_string().as_str(), *metric)
         .await?;
 
-    let nodes = data
-        .nodes
-        .iter()
-        .map(|(name, weight)| (name.clone(), *weight))
-        .collect::<HashMap<String, f64>>();
+    let nodes = data.nodes.into_iter().collect::<HashMap<String, f64>>();
 
     let items = data
         .edges
-        .iter()
+        .into_iter()
         .map(|(from, to, weight)| {
-            let from_weight = nodes.get(from).unwrap_or(&0.0);
-            let to_weight = nodes.get(to).unwrap_or(&0.0);
+            let from_weight = nodes.get(&from).cloned().unwrap_or(0.0);
+            let to_weight = nodes.get(&to).cloned().unwrap_or(0.0);
 
             let row = Row(vec![
                 Value::Str(owner.to_string()),
-                Value::Str(from.to_string()),
-                Value::F64(*from_weight),
-                Value::Str(to.to_string()),
-                Value::F64(*to_weight),
-                Value::F64(*weight),
+                Value::Str(from),
+                Value::F64(from_weight),
+                Value::Str(to),
+                Value::F64(to_weight),
+                Value::F64(weight),
             ]);
 
             let key = Key::Str(owner.to_string());

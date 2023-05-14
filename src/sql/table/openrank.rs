@@ -3,7 +3,7 @@ use gluesql::core::data::Schema;
 use gluesql::prelude::DataType;
 use lazy_static::lazy_static;
 
-pub static OPENRANK_TABLE_NAME: &'static str = "Openrank";
+pub static OPENRANK_TABLE_NAME: &str = "Openrank";
 
 lazy_static! {
     pub static ref OPENRANK_TABLE_SCHEMA: Schema = Schema {

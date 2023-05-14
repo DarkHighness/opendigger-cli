@@ -7,9 +7,9 @@ use lazy_static::lazy_static;
 
 use crate::api::Metric;
 
-use super::{DataFetchError, TableOwner};
+use super::{DataError, TableOwner};
 
-pub static ACTIVE_DATES_AND_TIMES_TABLE_NAME: &'static str = "ActiveDatesAndTimes";
+pub static ACTIVE_DATES_AND_TIMES_TABLE_NAME: &str = "ActiveDatesAndTimes";
 
 lazy_static! {
     pub static ref ACTIVE_DATES_AND_TIMES_TABLE_SCHEMA: Schema = Schema {
@@ -43,14 +43,14 @@ lazy_static! {
 pub(crate) async fn fetch_data(
     owner: &TableOwner,
     metric: &Metric,
-) -> Result<Vec<(Key, Row)>, DataFetchError> {
+) -> Result<Vec<(Key, Row)>, DataError> {
     let api = crate::api::get();
     let data = api
-        .get::<BTreeMap<String, Vec<i64>>>(owner.to_string().as_str(), metric.clone())
+        .get::<BTreeMap<String, Vec<i64>>>(owner.to_string().as_str(), *metric)
         .await?;
 
     let items = data
-        .iter()
+        .into_iter()
         .flat_map(|(month, value)| {
             value
                 .into_iter()
@@ -66,9 +66,9 @@ pub(crate) async fn fetch_data(
 
                     let row = Row(vec![
                         Value::Str(owner.to_string()),
-                        Value::Date(date.clone()),
+                        Value::Date(date),
                         Value::I64(hour as i64),
-                        Value::I64(value.clone()),
+                        Value::I64(value),
                     ]);
 
                     let key = Key::Date(date);

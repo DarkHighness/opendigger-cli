@@ -14,13 +14,9 @@ use super::{
 };
 
 #[derive(Debug, thiserror::Error)]
-pub enum DataFetchError {
+pub enum DataError {
     #[error(transparent)]
     ApiError(#[from] crate::api::ApiError),
-    #[error("Unsupported table type: {0}")]
-    InvalidRepositoryMetric(TableType),
-    #[error("Unsupported table type: {0}")]
-    InvalidUserMetric(TableType),
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -145,48 +141,18 @@ impl TryFrom<&str> for TableOwner {
 
 impl TableType {
     pub fn support_repository_table(&self) -> bool {
-        match self {
-            TableType::OpenRank
-            | TableType::Activity
-            | TableType::Attention
-            | TableType::ActiveDatesAndTimes
-            | TableType::Stars
-            | TableType::TechnicalFork
-            | TableType::Participants
-            | TableType::NewContributors
-            | TableType::NewContributorsDetail
-            | TableType::InactiveContributors
-            | TableType::BusFactor
-            | TableType::BusFactorDetail
-            | TableType::Issues
-            | TableType::IssuesNew
-            | TableType::IssuesClosed
-            | TableType::IssueComments
-            | TableType::IssueResponseTime
-            | TableType::IssueResolutionDuration
-            | TableType::IssueAge
-            | TableType::CodeChangeLines
-            | TableType::CodeChangeLinesAdd
-            | TableType::CodeChangeLinesRemove
-            | TableType::CodeChangeLinesSum
-            | TableType::ChangeRequests
-            | TableType::ChangeRequestsOpen
-            | TableType::ChangeRequestsAccepted
-            | TableType::ChangeRequestsReviews
-            | TableType::ChangeRequestResponseTime
-            | TableType::ChangeRequestResolutionDuration
-            | TableType::ChangeRequestAge
-            | TableType::RepoNetwork
-            | TableType::DeveloperNetwork => true,
-            _ => false,
-        }
+        // All table types support repository table
+        true
     }
 
     pub fn support_user_table(&self) -> bool {
-        match self {
-            TableType::OpenRank | TableType::Activity => true,
-            _ => false,
-        }
+        matches!(
+            self,
+            TableType::OpenRank
+                | TableType::Activity
+                | TableType::DeveloperNetwork
+                | TableType::RepoNetwork
+        )
     }
 
     pub fn as_repo_metric(&self) -> Option<Metric> {
@@ -245,7 +211,6 @@ impl TableType {
             TableType::ChangeRequestAge => crate::api::RepositoryMetric::ChangeRequestAge.into(),
             TableType::RepoNetwork => crate::api::RepositoryMetric::RepoNetwork.into(),
             TableType::DeveloperNetwork => crate::api::RepositoryMetric::DeveloperNetwork.into(),
-            _ => return None,
         };
 
         Some(metric)
@@ -314,7 +279,7 @@ impl TableEntry {
         &self.metric
     }
 
-    pub async fn fetch_data(&self) -> Result<Vec<(Key, Row)>, DataFetchError> {
+    pub async fn fetch_data(&self) -> Result<Vec<(Key, Row)>, DataError> {
         match self.r#type {
             TableType::OpenRank
             | TableType::Activity
@@ -345,19 +310,19 @@ impl TableEntry {
             TableType::BusFactorDetail => {
                 bus_factor::fetch_detail_data(&self.owner, &self.metric).await
             }
-            TableType::Issues => issue::fetch_data(&self.owner).await,
+            TableType::Issues => issue::fetch_combined_data(&self.owner).await,
             TableType::IssueResponseTime
             | TableType::IssueResolutionDuration
             | TableType::IssueAge => issue::fetch_detail_data(&self.owner, &self.metric).await,
-            TableType::CodeChangeLines => code_change_lines::fetch_data(&self.owner).await,
-            TableType::ChangeRequests => change_request::fetch_data(&self.owner).await,
+            TableType::CodeChangeLines => code_change_lines::fetch_combined_data(&self.owner).await,
+            TableType::ChangeRequests => change_request::fetch_combined_data(&self.owner).await,
             TableType::ChangeRequestResponseTime
             | TableType::ChangeRequestResolutionDuration
             | TableType::ChangeRequestAge => {
                 change_request::fetch_detail_data(&self.owner, &self.metric).await
             }
             TableType::RepoNetwork | TableType::DeveloperNetwork => {
-                network::fetch_data(&self.owner, &self.metric).await
+                network::fetch_network_data(&self.owner, &self.metric).await
             }
         }
     }
@@ -372,22 +337,22 @@ impl Display for TableEntry {
 async fn common_fetch_data(
     owner: &TableOwner,
     metric: &Metric,
-) -> Result<Vec<(Key, Row)>, DataFetchError> {
+) -> Result<Vec<(Key, Row)>, DataError> {
     let api = crate::api::get();
     let data = api
-        .get::<BTreeMap<String, f64>>(owner.to_string().as_str(), metric.clone())
+        .get::<BTreeMap<String, f64>>(owner.to_string().as_str(), *metric)
         .await?;
 
     let items = data
-        .iter()
+        .into_iter()
         .map(|(month, value)| {
             let row = Row(vec![
                 Value::Str(owner.to_string()),
-                Value::Str(month.clone()),
-                Value::F64(value.clone()),
+                Value::Str(month),
+                Value::F64(value),
             ]);
 
-            let key = Key::Str(month.clone());
+            let key = Key::Str(owner.to_string());
 
             (key, row)
         })

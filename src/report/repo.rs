@@ -4,9 +4,16 @@ use crate::api::RepositoryMetric;
 
 use super::ReportError;
 
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct NetworkGraph {
+    nodes: Vec<(String, f64)>,
+    edges: Vec<(String, String, f64)>,
+}
+
 pub struct ReporOverview {
     pub owner: String,
     pub star_trend: Option<Vec<(String, i64)>>,
+    pub repo_network: Option<NetworkGraph>,
 }
 
 impl ReporOverview {
@@ -14,6 +21,7 @@ impl ReporOverview {
         Self {
             owner,
             star_trend: None,
+            repo_network: None,
         }
     }
 
@@ -22,8 +30,7 @@ impl ReporOverview {
         let star_trend = api
             .get::<BTreeMap<String, i64>>(&self.owner, RepositoryMetric::Stars.into())
             .await?
-            .iter()
-            .map(|(date, value)| (date.clone(), *value))
+            .into_iter()
             .fold(Vec::new(), |state, element| {
                 let mut state = state;
                 if let Some((_, last_value)) = state.last() {
@@ -36,6 +43,10 @@ impl ReporOverview {
             });
 
         self.star_trend = Some(star_trend);
+
+        let _repo_network = api
+            .get::<NetworkGraph>(&self.owner, RepositoryMetric::RepoNetwork.into())
+            .await?;
 
         Ok(())
     }

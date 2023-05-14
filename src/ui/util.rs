@@ -9,7 +9,7 @@ use gluesql::{core::data::Interval, prelude::Value};
 use itertools::Itertools;
 use term_table::{row::Row, table_cell::TableCell};
 use term_table::{Table, TableStyle};
-use tui::backend::{Backend, CrosstermBackend};
+use tui::backend::CrosstermBackend;
 use tui::Terminal;
 
 use super::UIError;
@@ -63,7 +63,7 @@ pub fn render_rows(rows: &[gluesql::prelude::Row]) -> Vec<Vec<String>> {
         .collect::<Vec<_>>()
 }
 
-pub fn render_csv(header: &[String], rows: &Vec<Vec<String>>) -> String {
+pub fn render_csv(header: &[String], rows: &[Vec<String>]) -> String {
     let header = header
         .iter()
         .map(|header: &String| header.to_string())

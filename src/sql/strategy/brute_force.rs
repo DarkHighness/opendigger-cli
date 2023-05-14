@@ -6,7 +6,7 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 
 use crate::sql::{
-    table::{DataFetchError, TableEntry, TableOwner},
+    table::{DataError, TableEntry, TableOwner},
     TableType,
 };
 
@@ -31,7 +31,7 @@ impl StorageStrategy for BruteForceStoragePolicy {
         let owners: Vec<TableOwner> = SINGLE_QUOTED_STRING_REGEX
             .captures_iter(query)
             .filter_map(|capture| capture.get(1).as_ref().map(|s| s.as_str()))
-            .filter_map(|capture| TableOwner::new(capture))
+            .filter_map(TableOwner::new)
             .collect();
 
         tracing::debug!("Found owners: {:?}", owners);
@@ -49,7 +49,7 @@ impl StorageStrategy for BruteForceStoragePolicy {
         let entries = owners
             .iter()
             .filter(|owner| !self.blacklist.borrow().contains(owner))
-            .filter_map(|owner| TableEntry::new(table_type.clone(), owner.clone()))
+            .filter_map(|owner| TableEntry::new(table_type, owner.clone()))
             .collect::<Vec<_>>();
 
         let (tables, errors) = futures::future::join_all(
@@ -70,8 +70,7 @@ impl StorageStrategy for BruteForceStoragePolicy {
             errors
                 .into_iter()
                 .partition::<Vec<_>, _>(|(_, error)| match error {
-                    DataFetchError::ApiError(api_error) => api_error.is_data_not_found(),
-                    _ => false,
+                    DataError::ApiError(api_error) => api_error.is_data_not_found(),
                 });
 
         if !errors.is_empty() {
@@ -87,8 +86,7 @@ impl StorageStrategy for BruteForceStoragePolicy {
 
         let tables = tables
             .into_iter()
-            .map(|result| result.1.unwrap())
-            .flatten()
+            .flat_map(|result| result.1.unwrap())
             .collect();
 
         Ok(crate::sql::table::StorageTable::new(table_type, tables))

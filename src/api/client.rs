@@ -45,7 +45,7 @@ impl ApiClient {
         Ok(data)
     }
 
-    pub async fn get<T>(&self, owner: &str, r#type: Metric) -> Result<Arc<T>, ApiError>
+    pub async fn get<T>(&self, owner: &str, r#type: Metric) -> Result<T, ApiError>
     where
         for<'a> T: serde::Deserialize<'a> + Send + Sync + Clone + 'static,
     {
@@ -57,7 +57,9 @@ impl ApiClient {
             .get(url.as_str())
             .and_then(|data| data.downcast::<T>().ok())
         {
-            return Ok(data);
+            tracing::debug!("Fetched data from cache {}:{}", owner, r#type.as_ref());
+
+            return Ok(data.as_ref().clone());
         }
 
         let response = self.client.get(&url).send().await?;
@@ -74,6 +76,6 @@ impl ApiClient {
 
         tracing::debug!("Fetched data from {}:{}", owner, r#type.as_ref());
 
-        Ok(data)
+        Ok(data.as_ref().clone())
     }
 }

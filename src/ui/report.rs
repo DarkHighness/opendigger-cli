@@ -41,7 +41,7 @@ impl RepoOverviewUI {
 
         let title = format!(" {}'s Report ", self.report.owner);
 
-        let block = Block::default()
+        let _block = Block::default()
             .title(title.as_str())
             .borders(Borders::ALL)
             .border_type(BorderType::Double);
@@ -142,12 +142,10 @@ impl RepoOverviewUI {
         loop {
             terminal.draw(|frame| self.ui(frame))?;
 
-            match event::read()? {
-                event::Event::Key(key) => match key.code {
-                    event::KeyCode::Char('q') => break,
-                    _ => {}
-                },
-                _ => {}
+            if let event::Event::Key(key) = event::read()? {
+                if let event::KeyCode::Char('q') = key.code {
+                    break;
+                }
             }
         }
 

@@ -40,7 +40,6 @@ pub async fn execute_sql_query(query: &str) -> anyhow::Result<Output> {
                         .iter()
                         .zip(row.into_iter())
                         .map(|(label, value)| (label.to_string(), value))
-                        .into_iter()
                 })
                 .collect::<Vec<_>>();
 
@@ -99,7 +98,6 @@ pub async fn execute_sql_queries(query: &str) -> anyhow::Result<Vec<Output>> {
                                 .iter()
                                 .zip(row.into_iter())
                                 .map(|(label, value)| (label.to_string(), value))
-                                .into_iter()
                         })
                         .collect::<Vec<_>>();
 

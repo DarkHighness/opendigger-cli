@@ -7,17 +7,16 @@ use lazy_static::lazy_static;
 
 use crate::api::Metric;
 
-use super::{DataFetchError, TableOwner};
+use super::{DataError, TableOwner};
 
-pub static CHANGE_REQUESTS_TABLE_NAME: &'static str = "ChangeRequests";
-pub static CHANGE_REQUESTS_OPEN_TABLE_NAME: &'static str = "ChangeRequestsOpen";
-pub static CHANGE_REQUESTS_ACCEPTED_TABLE_NAME: &'static str = "ChangeRequestsAccepted";
-pub static CHANGE_REQUESTS_REVIEWS_TABLE_NAME: &'static str = "ChangeRequestsReviews";
+pub static CHANGE_REQUESTS_TABLE_NAME: &str = "ChangeRequests";
+pub static CHANGE_REQUESTS_OPEN_TABLE_NAME: &str = "ChangeRequestsOpen";
+pub static CHANGE_REQUESTS_ACCEPTED_TABLE_NAME: &str = "ChangeRequestsAccepted";
+pub static CHANGE_REQUESTS_REVIEWS_TABLE_NAME: &str = "ChangeRequestsReviews";
 
-pub static CHANGE_REQUEST_RESPONSE_TIME_TABLE_NAME: &'static str = "ChangeRequestResponseTime";
-pub static CHANGE_REQUEST_RESOLUTION_DURATION_TABLE_NAME: &'static str =
-    "ChangeRequestResolutionDuration";
-pub static CHANGE_REQUEST_AGE_TABLE_NAME: &'static str = "ChangeRequestAge";
+pub static CHANGE_REQUEST_RESPONSE_TIME_TABLE_NAME: &str = "ChangeRequestResponseTime";
+pub static CHANGE_REQUEST_RESOLUTION_DURATION_TABLE_NAME: &str = "ChangeRequestResolutionDuration";
+pub static CHANGE_REQUEST_AGE_TABLE_NAME: &str = "ChangeRequestAge";
 
 lazy_static! {
     pub static ref CHANGE_REQUESTS_TABLE_SCHEMA: Schema = Schema {
@@ -254,7 +253,7 @@ lazy_static! {
     };
 }
 
-pub(crate) async fn fetch_data(owner: &TableOwner) -> Result<Vec<(Key, Row)>, DataFetchError> {
+pub(crate) async fn fetch_combined_data(owner: &TableOwner) -> Result<Vec<(Key, Row)>, DataError> {
     let api = crate::api::get();
 
     let (change_requests_open, change_requests_accepted, change_requests_reviews) =
@@ -305,6 +304,7 @@ pub(crate) async fn fetch_data(owner: &TableOwner) -> Result<Vec<(Key, Row)>, Da
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, serde::Deserialize)]
 struct Response {
     avg: BTreeMap<String, f64>,
@@ -319,16 +319,15 @@ struct Response {
 pub(crate) async fn fetch_detail_data(
     owner: &TableOwner,
     metric: &Metric,
-) -> Result<Vec<(Key, Row)>, DataFetchError> {
+) -> Result<Vec<(Key, Row)>, DataError> {
     let api = crate::api::get();
     let data = api
-        .get::<Response>(owner.to_string().as_str(), metric.clone())
+        .get::<Response>(owner.to_string().as_str(), *metric)
         .await?;
 
     let items = data
         .avg
         .keys()
-        .into_iter()
         .map(|key| {
             let avg = data.avg.get(key).unwrap();
             let q0 = data.quantile_0.get(key).unwrap();

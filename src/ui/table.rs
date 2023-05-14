@@ -20,6 +20,7 @@ pub enum TableUI {
     Interactive(InteractiveTableUI),
 }
 
+#[allow(dead_code)]
 pub struct SimpleTableUI {
     name: String,
     header: Vec<String>,
@@ -213,14 +214,13 @@ impl InteractiveTableUI {
         loop {
             terminal.draw(|frame| self.ui(frame))?;
 
-            match event::read()? {
-                event::Event::Key(key) => match key.code {
+            if let event::Event::Key(key) = event::read()? {
+                match key.code {
                     event::KeyCode::Char('q') => break,
                     event::KeyCode::Down => self.select_next(),
                     event::KeyCode::Up => self.select_previous(),
                     _ => {}
-                },
-                _ => {}
+                }
             }
         }
 
