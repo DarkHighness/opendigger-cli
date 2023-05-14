@@ -11,6 +11,7 @@ mod cli;
 mod command;
 mod config;
 mod engine;
+mod report;
 mod sql;
 mod ui;
 

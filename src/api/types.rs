@@ -102,6 +102,18 @@ impl AsRef<str> for Metric {
     }
 }
 
+impl From<RepositoryMetric> for Metric {
+    fn from(metric: RepositoryMetric) -> Self {
+        Metric::Repo(metric)
+    }
+}
+
+impl From<UserMetric> for Metric {
+    fn from(metric: UserMetric) -> Self {
+        Metric::User(metric)
+    }
+}
+
 impl Metric {
     pub fn is_repo_metric(&self) -> bool {
         matches!(self, Metric::Repo(_))
@@ -119,6 +131,7 @@ impl RepositoryMetric {
             .collect::<Vec<_>>()
     }
 }
+
 
 impl UserMetric {
     pub fn available_types() -> Vec<&'static str> {

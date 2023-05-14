@@ -5,6 +5,10 @@ use gluesql::core::ast;
 use gluesql::prelude::Payload;
 use once_cell::sync::Lazy;
 
+pub use util::{execute_sql_queries, execute_sql_query};
+
+mod util;
+
 #[derive(Debug)]
 pub struct Engine {}
 
@@ -20,6 +24,8 @@ pub enum EngineExecutionError {
     EngineError(#[from] Box<dyn std::error::Error + Send + Sync>),
     #[error(transparent)]
     UIError(#[from] crate::ui::UIError),
+    #[error(transparent)]
+    ReportError(#[from] crate::report::ReportError),
 }
 
 impl Engine {
@@ -119,8 +125,14 @@ impl Engine {
                 )
                 .await?;
             }
-            Commands::ReportCommand(_command) => {
-                unimplemented!("Report command not implemented yet")
+            Commands::ReportCommand(command) => {
+                let owner = command.owner;
+                if owner.contains("/") {
+                    let mut report = crate::report::ReporOverview::new(owner);
+                    report.generate_report().await?;
+
+                    crate::ui::RepoOverviewUI::new(report).run()?;
+                }
             }
         }
 

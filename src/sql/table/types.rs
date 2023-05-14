@@ -191,72 +191,60 @@ impl TableType {
 
     pub fn as_repo_metric(&self) -> Option<Metric> {
         let metric = match self {
-            TableType::OpenRank => Metric::Repo(crate::api::RepositoryMetric::OpenRank),
-            TableType::Activity => Metric::Repo(crate::api::RepositoryMetric::Activity),
-            TableType::Attention => Metric::Repo(crate::api::RepositoryMetric::Attention),
+            TableType::OpenRank => crate::api::RepositoryMetric::OpenRank.into(),
+            TableType::Activity => crate::api::RepositoryMetric::Activity.into(),
+            TableType::Attention => crate::api::RepositoryMetric::Attention.into(),
             TableType::ActiveDatesAndTimes => {
-                Metric::Repo(crate::api::RepositoryMetric::ActiveDatesAndTimes)
+                crate::api::RepositoryMetric::ActiveDatesAndTimes.into()
             }
-            TableType::Stars => Metric::Repo(crate::api::RepositoryMetric::Stars),
-            TableType::TechnicalFork => Metric::Repo(crate::api::RepositoryMetric::TechnicalFork),
-            TableType::Participants => Metric::Repo(crate::api::RepositoryMetric::Participants),
-            TableType::NewContributors => {
-                Metric::Repo(crate::api::RepositoryMetric::NewContributors)
-            }
+            TableType::Stars => crate::api::RepositoryMetric::Stars.into(),
+            TableType::TechnicalFork => crate::api::RepositoryMetric::TechnicalFork.into(),
+            TableType::Participants => crate::api::RepositoryMetric::Participants.into(),
+            TableType::NewContributors => crate::api::RepositoryMetric::NewContributors.into(),
             TableType::NewContributorsDetail => {
-                Metric::Repo(crate::api::RepositoryMetric::NewContributorsDetail)
+                crate::api::RepositoryMetric::NewContributorsDetail.into()
             }
             TableType::InactiveContributors => {
-                Metric::Repo(crate::api::RepositoryMetric::InactiveContributors)
+                crate::api::RepositoryMetric::InactiveContributors.into()
             }
-            TableType::BusFactor => Metric::Repo(crate::api::RepositoryMetric::BusFactor),
-            TableType::BusFactorDetail => {
-                Metric::Repo(crate::api::RepositoryMetric::BusFactorDetail)
-            }
+            TableType::BusFactor => crate::api::RepositoryMetric::BusFactor.into(),
+            TableType::BusFactorDetail => crate::api::RepositoryMetric::BusFactorDetail.into(),
             TableType::Issues => Metric::Custom,
-            TableType::IssuesNew => Metric::Repo(crate::api::RepositoryMetric::IssuesNew),
-            TableType::IssuesClosed => Metric::Repo(crate::api::RepositoryMetric::IssuesClosed),
-            TableType::IssueComments => Metric::Repo(crate::api::RepositoryMetric::IssueComments),
-            TableType::IssueResponseTime => {
-                Metric::Repo(crate::api::RepositoryMetric::IssueResponseTime)
-            }
+            TableType::IssuesNew => crate::api::RepositoryMetric::IssuesNew.into(),
+            TableType::IssuesClosed => crate::api::RepositoryMetric::IssuesClosed.into(),
+            TableType::IssueComments => crate::api::RepositoryMetric::IssueComments.into(),
+            TableType::IssueResponseTime => crate::api::RepositoryMetric::IssueResponseTime.into(),
             TableType::IssueResolutionDuration => {
-                Metric::Repo(crate::api::RepositoryMetric::IssueResolutionDuration)
+                crate::api::RepositoryMetric::IssueResolutionDuration.into()
             }
-            TableType::IssueAge => Metric::Repo(crate::api::RepositoryMetric::IssueAge),
+            TableType::IssueAge => crate::api::RepositoryMetric::IssueAge.into(),
             TableType::CodeChangeLines => Metric::Custom,
             TableType::CodeChangeLinesAdd => {
-                Metric::Repo(crate::api::RepositoryMetric::CodeChangeLinesAdd)
+                crate::api::RepositoryMetric::CodeChangeLinesAdd.into()
             }
             TableType::CodeChangeLinesRemove => {
-                Metric::Repo(crate::api::RepositoryMetric::CodeChangeLinesRemove)
+                crate::api::RepositoryMetric::CodeChangeLinesRemove.into()
             }
             TableType::CodeChangeLinesSum => {
-                Metric::Repo(crate::api::RepositoryMetric::CodeChangeLinesSum)
+                crate::api::RepositoryMetric::CodeChangeLinesSum.into()
             }
             TableType::ChangeRequests => Metric::Custom,
-            TableType::ChangeRequestsOpen => {
-                Metric::Repo(crate::api::RepositoryMetric::ChangeRequests)
-            }
+            TableType::ChangeRequestsOpen => crate::api::RepositoryMetric::ChangeRequests.into(),
             TableType::ChangeRequestsAccepted => {
-                Metric::Repo(crate::api::RepositoryMetric::ChangeRequestsAccepted)
+                crate::api::RepositoryMetric::ChangeRequestsAccepted.into()
             }
             TableType::ChangeRequestsReviews => {
-                Metric::Repo(crate::api::RepositoryMetric::ChangeRequestsReviews)
+                crate::api::RepositoryMetric::ChangeRequestsReviews.into()
             }
             TableType::ChangeRequestResponseTime => {
-                Metric::Repo(crate::api::RepositoryMetric::ChangeRequestResponseTime)
+                crate::api::RepositoryMetric::ChangeRequestResponseTime.into()
             }
             TableType::ChangeRequestResolutionDuration => {
-                Metric::Repo(crate::api::RepositoryMetric::ChangeRequestResolutionDuration)
+                crate::api::RepositoryMetric::ChangeRequestResolutionDuration.into()
             }
-            TableType::ChangeRequestAge => {
-                Metric::Repo(crate::api::RepositoryMetric::ChangeRequestAge)
-            }
-            TableType::RepoNetwork => Metric::Repo(crate::api::RepositoryMetric::RepoNetwork),
-            TableType::DeveloperNetwork => {
-                Metric::Repo(crate::api::RepositoryMetric::DeveloperNetwork)
-            }
+            TableType::ChangeRequestAge => crate::api::RepositoryMetric::ChangeRequestAge.into(),
+            TableType::RepoNetwork => crate::api::RepositoryMetric::RepoNetwork.into(),
+            TableType::DeveloperNetwork => crate::api::RepositoryMetric::DeveloperNetwork.into(),
             _ => return None,
         };
 
@@ -265,10 +253,10 @@ impl TableType {
 
     pub fn as_user_metric(&self) -> Option<Metric> {
         let metric = match self {
-            TableType::OpenRank => Metric::User(crate::api::UserMetric::OpenRank),
-            TableType::Activity => Metric::User(crate::api::UserMetric::Activity),
-            TableType::DeveloperNetwork => Metric::User(crate::api::UserMetric::DeveloperNetwork),
-            TableType::RepoNetwork => Metric::User(crate::api::UserMetric::RepoNetwork),
+            TableType::OpenRank => crate::api::UserMetric::OpenRank.into(),
+            TableType::Activity => crate::api::UserMetric::Activity.into(),
+            TableType::DeveloperNetwork => crate::api::UserMetric::DeveloperNetwork.into(),
+            TableType::RepoNetwork => crate::api::UserMetric::RepoNetwork.into(),
             _ => return None,
         };
 
