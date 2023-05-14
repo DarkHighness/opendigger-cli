@@ -7,3 +7,9 @@ pub enum ApiError {
     #[error("Request response error, status code: {0}")]
     BadRequestResponse(http::StatusCode),
 }
+
+impl ApiError {
+    pub fn is_data_not_found(&self) -> bool {
+        matches!(self, Self::DataNotFound(_))
+    }
+}

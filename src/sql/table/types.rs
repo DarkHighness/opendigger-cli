@@ -3,6 +3,8 @@ use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
 use gluesql::prelude::{Key, Row, Value};
+use once_cell::sync::Lazy;
+use regex::Regex;
 
 use crate::api::Metric;
 
@@ -46,6 +48,7 @@ pub enum TableType {
     OpenRank,
     Activity,
     Attention,
+    ActiveDatesAndTimes,
 }
 
 impl Display for TableOwner {
@@ -63,8 +66,21 @@ impl Display for TableType {
     }
 }
 
+pub static YEAR_MONTH_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r#"(\d{4})-(\d{2})"#).unwrap());
+pub static YEAR_MONTH_DAY_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r#"(\d{4})-(\d{2})-(\d{2})"#).unwrap());
+
 impl TableOwner {
     pub fn new(owner: &str) -> Option<TableOwner> {
+        // Blacklist some invalid owner names
+        match (
+            YEAR_MONTH_REGEX.is_match(owner),
+            YEAR_MONTH_DAY_REGEX.is_match(owner),
+        ) {
+            (false, false) => {}
+            _ => return None,
+        }
+
         let parts = owner.split('/').collect::<Vec<_>>();
 
         match parts.len() {
@@ -97,34 +113,43 @@ impl TryFrom<&str> for TableOwner {
 impl TableType {
     pub fn support_repository_table(&self) -> bool {
         match self {
-            TableType::OpenRank => true,
-            TableType::Activity => true,
-            TableType::Attention => true,
+            TableType::OpenRank
+            | TableType::Activity
+            | TableType::Attention
+            | TableType::ActiveDatesAndTimes => true,
+            _ => false,
         }
     }
 
     pub fn support_user_table(&self) -> bool {
         match self {
-            TableType::OpenRank => true,
-            TableType::Activity => true,
-            TableType::Attention => false,
+            TableType::OpenRank | TableType::Activity => true,
+            _ => false,
         }
     }
 
     pub fn as_repo_metric(&self) -> Option<Metric> {
-        match self {
-            TableType::OpenRank => Some(Metric::Repo(crate::api::RepositoryMetric::OpenRank)),
-            TableType::Activity => Some(Metric::Repo(crate::api::RepositoryMetric::Activity)),
-            TableType::Attention => Some(Metric::Repo(crate::api::RepositoryMetric::Attention)),
-        }
+        let metric = match self {
+            TableType::OpenRank => Metric::Repo(crate::api::RepositoryMetric::OpenRank),
+            TableType::Activity => Metric::Repo(crate::api::RepositoryMetric::Activity),
+            TableType::Attention => Metric::Repo(crate::api::RepositoryMetric::Attention),
+            TableType::ActiveDatesAndTimes => {
+                Metric::Repo(crate::api::RepositoryMetric::ActiveDatesAndTimes)
+            }
+            _ => return None,
+        };
+
+        Some(metric)
     }
 
     pub fn as_user_metric(&self) -> Option<Metric> {
-        match self {
-            TableType::OpenRank => Some(Metric::User(crate::api::UserMetric::OpenRank)),
-            TableType::Activity => Some(Metric::User(crate::api::UserMetric::Activity)),
-            TableType::Attention => None,
-        }
+        let metric = match self {
+            TableType::OpenRank => Metric::User(crate::api::UserMetric::OpenRank),
+            TableType::Activity => Metric::User(crate::api::UserMetric::Activity),
+            _ => return None,
+        };
+
+        Some(metric)
     }
 }
 
@@ -176,6 +201,9 @@ impl TableEntry {
         match self.r#type {
             TableType::OpenRank | TableType::Activity | TableType::Attention => {
                 common_fetch_data(&self.owner, &self.metric).await
+            }
+            TableType::ActiveDatesAndTimes => {
+                unimplemented!()
             }
         }
     }
