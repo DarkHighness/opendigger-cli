@@ -1,6 +1,6 @@
 mod repo;
 
-pub use repo::ReporOverview;
+pub use repo::RepoOverview;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ReportError {

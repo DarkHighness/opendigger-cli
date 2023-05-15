@@ -10,13 +10,13 @@ pub struct NetworkGraph {
     edges: Vec<(String, String, f64)>,
 }
 
-pub struct ReporOverview {
+pub struct RepoOverview {
     pub owner: String,
     pub star_trend: Option<Vec<(String, i64)>>,
     pub repo_network: Option<NetworkGraph>,
 }
 
-impl ReporOverview {
+impl RepoOverview {
     pub fn new(owner: String) -> Self {
         Self {
             owner,

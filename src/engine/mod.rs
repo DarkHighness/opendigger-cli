@@ -105,7 +105,7 @@ impl Engine {
                             .into_iter()
                             .map(|table| vec![table])
                             .collect::<Vec<_>>();
-                        
+
                         TableUI::new(
                             ui_mode,
                             "Tables".to_string(),
@@ -146,7 +146,7 @@ impl Engine {
             Commands::Report(command) => {
                 let owner = command.owner;
                 if owner.contains('/') {
-                    let mut report = crate::report::ReporOverview::new(owner);
+                    let mut report = crate::report::RepoOverview::new(owner);
                     report.generate_report().await?;
 
                     crate::ui::RepoOverviewUI::new(report).run()?;

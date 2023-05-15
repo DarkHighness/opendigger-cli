@@ -9,7 +9,7 @@ use tui::{
     Frame,
 };
 
-pub use crate::report::ReporOverview;
+pub use crate::report::RepoOverview;
 
 use super::{
     util::{create_terminal, destory_terminal},
@@ -17,11 +17,11 @@ use super::{
 };
 
 pub struct RepoOverviewUI {
-    report: ReporOverview,
+    report: RepoOverview,
 }
 
 impl RepoOverviewUI {
-    pub fn new(report: ReporOverview) -> Self {
+    pub fn new(report: RepoOverview) -> Self {
         Self { report }
     }
 

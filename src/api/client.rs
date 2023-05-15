@@ -95,12 +95,12 @@ impl ApiClient {
             messages: vec![
                 Message {
                     role: MessageRole::System,
-                    content: ONEAPI_PROMPT.to_string()
+                    content: ONEAPI_PROMPT.to_string(),
                 },
                 Message {
                     role: MessageRole::User,
-                    content: format!("My first query is: {}", query)
-                }
+                    content: format!("My first query is: {}", query),
+                },
             ],
         };
 
