@@ -2,7 +2,7 @@ use crate::command::Commands;
 use crate::sql::Storage;
 use crate::ui::{TableUI, UIMode};
 use gluesql::core::ast;
-use gluesql::prelude::Payload;
+use gluesql::prelude::{Payload, PayloadVariable};
 use once_cell::sync::Lazy;
 
 pub use util::{execute_sql_queries, execute_sql_query};
@@ -98,6 +98,24 @@ impl Engine {
                         rows,
                     )?
                     .run()?;
+                }
+                Payload::ShowVariable(payload) => {
+                    if let PayloadVariable::Tables(tables) = payload {
+                        let rows = tables
+                            .into_iter()
+                            .map(|table| vec![table])
+                            .collect::<Vec<_>>();
+                        
+                        TableUI::new(
+                            ui_mode,
+                            "Tables".to_string(),
+                            vec!["name".to_string()],
+                            rows,
+                        )?
+                        .run()?;
+                    } else {
+                        tracing::error!("Invalid payload: {:?}", payload);
+                    }
                 }
                 _ => {
                     tracing::error!("Invalid payload: {:?}", payload);
