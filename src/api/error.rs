@@ -5,7 +5,11 @@ pub enum ApiError {
     #[error("Data not found: {0}")]
     DataNotFound(String),
     #[error("Request response error, status code: {0}")]
-    BadRequestResponse(http::StatusCode),
+    BadRequest(http::StatusCode),
+    #[error("Unexpected response")]
+    UnexpectedResponse,
+    #[error("env OPENAI_API_KEY not set")]
+    ApiKeyNotSet,
 }
 
 impl ApiError {
