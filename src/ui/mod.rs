@@ -4,7 +4,7 @@ mod util;
 
 pub use report::RepoOverviewUI;
 pub use table::TableUI;
-pub use util::{render_csv, render_rows, render_table};
+pub use util::{format_human_readable_f64, render_csv, render_gluesql_rows};
 
 #[derive(Debug, Clone, Copy)]
 pub enum UIMode {
@@ -16,4 +16,8 @@ pub enum UIMode {
 pub enum UIError {
     #[error(transparent)]
     IoError(#[from] std::io::Error),
+}
+
+pub trait UI {
+    fn render(self) -> Result<(), UIError>;
 }

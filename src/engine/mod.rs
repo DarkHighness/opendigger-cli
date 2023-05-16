@@ -1,13 +1,16 @@
 use crate::command::Commands;
 use crate::sql::Storage;
 use crate::ui::{TableUI, UIMode};
+use anyhow::Context;
 use gluesql::core::ast;
 use gluesql::prelude::{Payload, PayloadVariable};
 use once_cell::sync::Lazy;
 
 pub use util::{execute_sql_queries, execute_sql_query};
+pub use value::{translate_from_gluesql_value, Value};
 
 mod util;
+mod value;
 
 #[derive(Debug)]
 pub struct Engine {}
@@ -71,10 +74,30 @@ impl Engine {
 
             match payload {
                 Payload::Select { labels, rows } => {
-                    let rows = crate::ui::render_rows(&rows);
+                    let rows = rows
+                        .into_iter()
+                        .map(|row| {
+                            row.into_iter()
+                                .map(|value| {
+                                    translate_from_gluesql_value(value)
+                                        .context("Failed to translate GlueSQL value to Value")
+                                        .unwrap()
+                                })
+                                .collect::<Vec<_>>()
+                        })
+                        .collect::<Vec<_>>();
 
                     if let Some(output_file) = output_file.as_ref() {
+                        let rows = rows
+                            .iter()
+                            .map(|row| {
+                                row.iter()
+                                    .map(|value| value.to_string())
+                                    .collect::<Vec<_>>()
+                            })
+                            .collect::<Vec<_>>();
                         let output = crate::ui::render_csv(&labels, &rows);
+
                         tokio::fs::write(output_file, output).await?;
 
                         tracing::info!("Output written to {}", output_file);
@@ -83,12 +106,12 @@ impl Engine {
                     let time = chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
                     let title = format!(" Query Result: {} ", time);
 
-                    TableUI::new(ui_mode, title, labels, rows)?.run()?;
+                    TableUI::new(ui_mode, title, labels, rows)?.render()?;
                 }
                 Payload::ShowColumns(columns) => {
                     let rows = columns
                         .into_iter()
-                        .map(|(name, typ)| vec![name, typ.to_string()])
+                        .map(|(name, typ)| vec![name.into(), typ.to_string().into()])
                         .collect::<Vec<_>>();
 
                     TableUI::new(
@@ -97,22 +120,17 @@ impl Engine {
                         vec!["Column".to_string(), "Type".to_string()],
                         rows,
                     )?
-                    .run()?;
+                    .render()?;
                 }
                 Payload::ShowVariable(payload) => {
                     if let PayloadVariable::Tables(tables) = payload {
                         let rows = tables
                             .into_iter()
-                            .map(|table| vec![table])
+                            .map(|table| vec![table.into()])
                             .collect::<Vec<_>>();
 
-                        TableUI::new(
-                            ui_mode,
-                            "Tables".to_string(),
-                            vec!["name".to_string()],
-                            rows,
-                        )?
-                        .run()?;
+                        TableUI::new(ui_mode, "Tables".to_string(), vec!["name".into()], rows)?
+                            .render()?;
                     } else {
                         tracing::error!("Invalid payload: {:?}", payload);
                     }
