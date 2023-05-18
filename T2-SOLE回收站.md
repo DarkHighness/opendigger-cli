@@ -122,24 +122,26 @@ Options:
 
 **该CLI工具支持的命令行参数：**
 
-![help](D:\研一下\开源\比赛\help.png)
+![help](https://github.com/nicole01101101zke/opendigger-cli/assets/60032364/45e234cb-078b-4f0b-b410-11f093c29155)
 
 **完成基本数据查询功能：**
 
-![basicquery1](D:\研一下\开源\比赛\basicquery1.png)
+![basicquery1](https://github.com/nicole01101101zke/opendigger-cli/assets/60032364/51eea0f7-6c11-4a27-a128-4627d3e6c1c1)
+
 
 **支持查询结果写入文件：**
 
-![basicquery](D:\研一下\开源\比赛\basicquery.png)
+![basicquery](https://github.com/nicole01101101zke/opendigger-cli/assets/60032364/e8eb89e7-c89e-4796-bc74-1d4eaa45390a)
+
 
 **支持查询结果TUI交互：**
 
-![TUI](D:\研一下\开源\比赛\TUI.png)
+![TUI](https://github.com/nicole01101101zke/opendigger-cli/assets/60032364/323c6aab-041e-4854-8097-4f845f4ca128)
 
 **ChatGPT支持生成查询语句，并产生最终结果：**
 
-![chatgpt](D:\研一下\开源\比赛\chatgpt.png)
+![chatgpt](https://github.com/nicole01101101zke/opendigger-cli/assets/60032364/3ff969cf-6377-42b7-aaa1-f81fa288c92f)
 
 **DevOps自动构建：**
 
-![devops](D:\研一下\开源\比赛\devops.png)
+![devops](https://github.com/nicole01101101zke/opendigger-cli/assets/60032364/d7b78d72-6185-4810-8969-4fb39f37225e)
