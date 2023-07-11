@@ -144,6 +144,15 @@ impl TableType {
 
         Some(metric)
     }
+    pub fn as_user_metric(&self) -> Option<Metric> {
+        let metric = match self {
+            TableType::RepoNetwork => crate::api::RepositoryMetric::repo_network.into(),
+            TableType::DeveloperNetwork => crate::api::RepositoryMetric::developer_network.into(),
+            _ => return None,
+        };
+
+        Some(metric)
+    }
 }
 
 impl TableEntry {
