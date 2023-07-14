@@ -85,7 +85,8 @@ pub(crate) async fn get_max_neighbor(
             }
         }
     } else {
-        let table_entry = TableEntry::parse("DeveloperNetwork", &owner).unwrap();
+        println!("{},{}",owner,node);
+        let table_entry = TableEntry::parse("DeveloperNetwork", owner).unwrap();
         let data_result: Result<Graph<NodeData, f64, Undirected>, DataError> =
             table_entry.fetch_generic_network_data().await;
 

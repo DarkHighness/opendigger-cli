@@ -1,6 +1,7 @@
 #![feature(let_chains)]
 #![feature(box_into_inner)]
 #![feature(async_closure)]
+#![feature(async_iterator)]
 
 use anyhow::Context;
 use tracing_subscriber::layer::SubscriberExt;
@@ -11,14 +12,13 @@ mod cli;
 mod command;
 mod config;
 mod engine;
+mod networkgraph;
 mod report;
 mod sql;
 mod ui;
-mod networkgraph;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
- 
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::from_default_env())
         .with(
@@ -33,19 +33,12 @@ async fn main() -> anyhow::Result<()> {
 
     api::setup(base_url).context("Setting up Api client")?;
 
-    //networkgraph::table::generic_network::fetch_network_data2().await;
-    networkgraph::analyze::test().await;
-
-/* 
     let command = cli::parse_command().await;
 
     engine::ENGINE
         .execute_command(command)
         .await
         .map_err(|err| anyhow::anyhow!("Failed to execute command: {:?}", err))?;
-*/
+
     Ok(())
-   
-
 }
-
