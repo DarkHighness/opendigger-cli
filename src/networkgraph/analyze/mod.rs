@@ -1,113 +1,152 @@
-use self::analyzer::{dijkstra_node, AnalyzeError, dijkstra_open_rank_node, get_biggest_edge_node_from_open_rank_node, get_biggest_edge_node_from_node, get_value_from_node};
+use self::analyzer::{
+    dijkstra_node, dijkstra_open_rank_node, edge_from_node, edge_from_open_rank_node,
+    get_biggest_edge_node_from_node, get_biggest_edge_node_from_open_rank_node,
+    get_neighbors_from_node, get_neighbors_from_open_rank_node, get_value_from_node,
+    get_value_from_open_rank_node, AnalyzeError,
+};
 
 use super::table::generic_network::NodeData;
 use super::table::openrank_network::OpenRankNode;
-use super::table::types::{TableEntry, DataError};
+use super::table::types::{DataError, TableEntry};
 
 use petgraph::Graph;
 use petgraph::Undirected;
 
 mod analyzer;
 
+pub(crate) async fn get_neighbors(
+    metric: &str,
+    owner: &str,
+    node: &str,
+) -> Result<Vec<String>, AnalyzeError> {
+    if metric == "OpenRank" {
+        let table_entry = TableEntry::parse("OpenRank", &owner).unwrap();
+        let data_result: Result<Graph<OpenRankNode, f64, Undirected>, DataError> =
+            table_entry.fetch_openrank_network_data().await;
 
-pub(crate) async fn test()
-{
-    let table_entry = TableEntry::parse("DeveloperNetwork", "frank-zsy").unwrap();
-    let data_result: Result<Graph<NodeData, f64, Undirected>, DataError> = table_entry.fetch_generic_network_data().await;
-
-    match data_result {
-        Ok(graph) => {
-            let data:Result<String, AnalyzeError> = dijkstra_node("Zzzzzhuzhiwei", "will-ww", graph).await;
-            match data {
-                Ok(result) => println!("Result: {}", result),
-                Err(error) => println!("Error: {:?}", error),
+        match data_result {
+            Ok(graph) => {
+                let data: Result<Vec<String>, AnalyzeError> =
+                    get_neighbors_from_open_rank_node(node, &graph).await;
+                match data {
+                    Ok(result) => Ok(result),
+                    Err(error) => Err(AnalyzeError::NoPathFound),
+                }
+            }
+            Err(error) => {
+                println!("Error fetching network data: {:?}", error);
+                Err(AnalyzeError::NodeNotFound)
             }
         }
-        Err(error) => {
-            println!("Error fetching network data: {:?}", error);
-        }
-    }
+    } else {
+        let table_entry = TableEntry::parse("DeveloperNetwork", &owner).unwrap();
+        let data_result: Result<Graph<NodeData, f64, Undirected>, DataError> =
+            table_entry.fetch_generic_network_data().await;
 
-    let table_entry = TableEntry::parse("RepoNetwork", "X-lab2017/open-digger").unwrap();
-    let data_result: Result<Graph<NodeData, f64, Undirected>, DataError> = table_entry.fetch_generic_network_data().await;
-
-    match data_result {
-        Ok(graph) => {
-            let data:Result<String, AnalyzeError> = dijkstra_node("sathishcyberintelsys/skf-labsss", "NOUIY/aws-sdk-java", graph).await;
-            match data {
-                Ok(result) => println!("Result: {}", result),
-                Err(error) => println!("Error: {:?}", error),
+        match data_result {
+            Ok(graph) => {
+                let data: Result<Vec<String>, AnalyzeError> =
+                    get_neighbors_from_node(node, &graph).await;
+                match data {
+                    Ok(result) => Ok(result),
+                    Err(error) => Err(AnalyzeError::NoPathFound),
+                }
+            }
+            Err(error) => {
+                println!("Error fetching network data: {:?}", error);
+                Err(AnalyzeError::NodeNotFound)
             }
         }
-        Err(error) => {
-            println!("Error fetching network data: {:?}", error);
-        }
     }
+}
 
-    let table_entry = TableEntry::parse("SpecialCircumstances", "X-lab2017/open-digger").unwrap();
-    let data_result: Result<Graph<OpenRankNode, f64, Undirected>, DataError> = table_entry.fetch_openrank_network_data().await;
+pub(crate) async fn get_max_neighbor(
+    metric: &str,
+    owner: &str,
+    node: &str,
+) -> Result<String, AnalyzeError> {
+    if metric == "OpenRank" {
+        let table_entry = TableEntry::parse("OpenRank", &owner).unwrap();
+        let data_result: Result<Graph<OpenRankNode, f64, Undirected>, DataError> =
+            table_entry.fetch_openrank_network_data().await;
 
-    match data_result {
-        Ok(graph) => {
-            let data:Result<String, AnalyzeError> = dijkstra_open_rank_node("44269", "101833", graph).await;
-            match data {
-                Ok(result) => println!("Result: {}", result),
-                Err(error) => println!("Error: {:?}", error),
+        match data_result {
+            Ok(graph) => {
+                let data: Result<String, AnalyzeError> =
+                    get_biggest_edge_node_from_open_rank_node(node, graph).await;
+                match data {
+                    Ok(result) => Ok(result),
+                    Err(error) => Err(AnalyzeError::NoPathFound),
+                }
+            }
+            Err(error) => {
+                println!("Error fetching network data: {:?}", error);
+                Err(AnalyzeError::NodeNotFound)
             }
         }
-        Err(error) => {
-            println!("Error fetching network data: {:?}", error);
-        }
-    }
+    } else {
+        let table_entry = TableEntry::parse("DeveloperNetwork", &owner).unwrap();
+        let data_result: Result<Graph<NodeData, f64, Undirected>, DataError> =
+            table_entry.fetch_generic_network_data().await;
 
-
-    let table_entry = TableEntry::parse("SpecialCircumstances", "X-lab2017/open-digger").unwrap();
-    let data_result: Result<Graph<OpenRankNode, f64, Undirected>, DataError> = table_entry.fetch_openrank_network_data().await;
-
-    match data_result {
-        Ok(graph) => {
-            let data:Result<String, AnalyzeError> = get_biggest_edge_node_from_open_rank_node("44269", graph).await;
-            match data {
-                Ok(result) => println!("Result: {}", result),
-                Err(error) => println!("Error: {:?}", error),
+        match data_result {
+            Ok(graph) => {
+                let data: Result<String, AnalyzeError> =
+                    get_biggest_edge_node_from_node(node, graph).await;
+                match data {
+                    Ok(result) => Ok(result),
+                    Err(error) => Err(AnalyzeError::NoPathFound),
+                }
+            }
+            Err(error) => {
+                println!("Error fetching network data: {:?}", error);
+                Err(AnalyzeError::NodeNotFound)
             }
         }
-        Err(error) => {
-            println!("Error fetching network data: {:?}", error);
-        }
     }
+}
 
-    let table_entry = TableEntry::parse("DeveloperNetwork", "X-lab2017/open-digger").unwrap();
-    let data_result: Result<Graph<NodeData, f64, Undirected>, DataError> = table_entry.fetch_generic_network_data().await;
+pub(crate) async fn get_node_value(
+    metric: &str,
+    owner: &str,
+    node: &str,
+) -> Result<f64, AnalyzeError> {
+    if metric == "OpenRank" {
+        let table_entry = TableEntry::parse("OpenRank", &owner).unwrap();
+        let data_result: Result<Graph<OpenRankNode, f64, Undirected>, DataError> =
+            table_entry.fetch_openrank_network_data().await;
 
-    match data_result {
-        Ok(graph) => {
-            let data:Result<String, AnalyzeError> = get_biggest_edge_node_from_node("Zzzzzhuzhiwei", graph).await;
-            match data {
-                Ok(result) => println!("Result: {}", result),
-                Err(error) => println!("Error: {:?}", error),
+        match data_result {
+            Ok(graph) => {
+                let data: Result<f64, AnalyzeError> =
+                    get_value_from_open_rank_node(node, &graph).await;
+                match data {
+                    Ok(result) => Ok(result),
+                    Err(error) => Err(AnalyzeError::NoPathFound),
+                }
+            }
+            Err(error) => {
+                println!("Error fetching network data: {:?}", error);
+                Err(AnalyzeError::NodeNotFound)
             }
         }
-        Err(error) => {
-            println!("Error fetching network data: {:?}", error);
-        }
-    }
+    } else {
+        let table_entry = TableEntry::parse("DeveloperNetwork", &owner).unwrap();
+        let data_result: Result<Graph<NodeData, f64, Undirected>, DataError> =
+            table_entry.fetch_generic_network_data().await;
 
-    let table_entry = TableEntry::parse("DeveloperNetwork", "X-lab2017/open-digger").unwrap();
-    let data_result: Result<Graph<NodeData, f64, Undirected>, DataError> = table_entry.fetch_generic_network_data().await;
-
-    match data_result {
-        Ok(graph) => {
-            let data:Result<f64, AnalyzeError> = get_value_from_node("Zzzzzhuzhiwei", graph).await;
-            match data {
-                Ok(result) => println!("Result: {}", result),
-                Err(error) => println!("Error: {:?}", error),
+        match data_result {
+            Ok(graph) => {
+                let data: Result<f64, AnalyzeError> = get_value_from_node(node, graph).await;
+                match data {
+                    Ok(result) => Ok(result),
+                    Err(error) => Err(AnalyzeError::NoPathFound),
+                }
+            }
+            Err(error) => {
+                println!("Error fetching network data: {:?}", error);
+                Err(AnalyzeError::NodeNotFound)
             }
         }
-        Err(error) => {
-            println!("Error fetching network data: {:?}", error);
-        }
     }
-
-
 }
