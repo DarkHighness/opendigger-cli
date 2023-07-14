@@ -1,12 +1,10 @@
-
-use petgraph::Graph;
-use petgraph::Undirected;
 use petgraph::algo::dijkstra;
 use petgraph::visit::EdgeRef;
+use petgraph::Graph;
+use petgraph::Undirected;
 
-
+use crate::networkgraph::table::types::{DataError, TableEntry};
 use crate::networkgraph::table::{generic_network::NodeData, openrank_network::OpenRankNode};
-
 
 #[derive(Debug, thiserror::Error)]
 pub enum AnalyzeError {
@@ -22,8 +20,7 @@ pub(crate) async fn dijkstra_open_rank_node(
     node_a: &str,
     node_b: &str,
     graph: Graph<OpenRankNode, f64, Undirected>,
-) -> Result<String, AnalyzeError>{
-
+) -> Result<String, AnalyzeError> {
     let node_a_index = match graph
         .node_indices()
         .find(|&index| graph[index].id == node_a)
@@ -39,7 +36,6 @@ pub(crate) async fn dijkstra_open_rank_node(
         Some(index) => index,
         None => return Err(AnalyzeError::NodeNotFound),
     };
-    
 
     let shortest_path = dijkstra(&graph, node_a_index, Some(node_b_index), |e| *e.weight());
 
@@ -55,16 +51,13 @@ pub(crate) async fn dijkstra_open_rank_node(
     } else {
         Err(AnalyzeError::NoPathFound)
     }
-    
 }
-
 
 pub(crate) async fn dijkstra_node(
     node_a: &str,
     node_b: &str,
     graph: Graph<NodeData, f64, Undirected>,
-) -> Result<String, AnalyzeError>{
-
+) -> Result<String, AnalyzeError> {
     let node_a_index = match graph
         .node_indices()
         .find(|&index| graph[index].name == node_a)
@@ -84,7 +77,6 @@ pub(crate) async fn dijkstra_node(
     let shortest_path = dijkstra(&graph, node_a_index, Some(node_b_index), |e| *e.weight());
 
     if let Some(length) = shortest_path.get(&node_b_index) {
-         
         let path = shortest_path
             .iter()
             .filter(|(_, &dist)| (dist - *length).abs() < 1e-6)
@@ -96,13 +88,12 @@ pub(crate) async fn dijkstra_node(
     } else {
         Err(AnalyzeError::NoPathFound)
     }
-    
 }
 
 pub(crate) async fn edge_from_open_rank_node(
     node: &str,
     graph: Graph<OpenRankNode, f64, Undirected>,
-) -> Result<String, AnalyzeError>{
+) -> Result<String, AnalyzeError> {
     let node_index = match graph.node_indices().find(|&index| graph[index].id == node) {
         Some(index) => index,
         None => return Err(AnalyzeError::NodeNotFound),
