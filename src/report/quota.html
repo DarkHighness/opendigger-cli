@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>数据可视化demo</title>
+    <link href="./styles/common.css" rel="stylesheet">
+    <script src="./scripts/Plugin/jquery-3.3.1.min.js"></script>
+    <script src="./scripts/Plugin/echarts.min.js"></script>
+    <script src="./scripts/Plugin/bmap.min.js"></script>
+    <script src="http://api.map.baidu.com/api?v=2.0&ak=LelFSt6BfykGf8m3PB5zr8LaXAG2cMg6"></script>
+    <script src="./scripts/quota.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.2.2/dist/echarts.min.js"></script>
+</head>
+<body>
+<!--顶部-->
+<header class="header left">
+    <div class="header_center" style="position:relative">
+        
+        <h2><strong>仓库的整体报告</strong></h2>
+
+    </div>
+    <div class="right nav text_right">
+        <ul>
+
+        </ul>
+    </div>
+
+</header>
+<!--内容部分-->
+<div class="con left">
+    <!--统计分析图-->
+    <div class="div_any">
+        <div class="left div_any01">
+            <div class="div_any_child">
+                <div class="div_any_title">Repo network</div>
+                <p id="forceChart1" class="p_chart"></p>
+            </div>
+            <div class="div_any_child">
+                <div class="div_any_title">各自然月Star数</div>
+                <p id="lineChart1" class="p_chart"></p>
+            </div>
+        </div>
+        <div class="left div_any01">
+            <div class="div_any_child">
+                <div class="div_any_title">各自然月OpenRank值</div>
+                <p id="lineChart3" class="p_chart"></p>
+            </div>
+            <div class="div_any_child">
+                <div class="div_any_title">各自然月Activity值</div>
+                <p id="lineChart4" class="p_chart"></p>
+            </div>
+            <div class="div_any_child">
+                <div class="div_any_title">各自然月Fork数</div>
+                <p id="lineChart2" class="p_chart"></p>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+</body>
+</html>
