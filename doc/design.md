@@ -240,7 +240,29 @@ $ opendigger-cli sql "SELECT * FROM Stars WHERE name = 'X-lab2017/open-digger' O
 
 ![basic_query_4](assets/basic_query_4.png)
 
-9. ChatGPT 查询
+9. 图查询： 查询用户'will-ww'在repo='X-lab2017/open-digger'上的'Developer network'指标数据，使用TUI展示数据值。
+
+```bash
+$ opendigger-cli cypher "MATCH (n:Node {value: 'will-ww'}) WHERE n.owner = 'X-lab2017/open-digger' AND n.metric = 'Developer network' RETURN n"
+```
+
+![cypher_3](assets/cypher_3.png)
+
+10. 图查询：查询用户'Zzzzzhuzhiwei'在repo='X-lab2017/open-digger'上的'Developer network'上的所有有合作关系或者是有相关性的用户。
+```bash
+$ opendigger-cli cypher "MATCH (n:Node {value: 'Zzzzzhuzhiwei'})-[]-(neighbor) where n.owner='X-lab2017/open-digger' and n.metric='Developer network' RETURN neighbor"
+```
+![cypher_1](assets/cypher_1.png)
+
+11. 图查询： 查询用户'Zzzzzhuzhiwei'在repo='X-lab2017/open-digger'上的'Developer network'上的合作最紧密的用户。
+
+```bash
+$ opendigger-cli cypher "MATCH (n:Node {value: 'Zzzzzhuzhiwei'})-[]->(neighbor) WHERE n.owner='X-lab2017/open-digger' and n.metric='Developer network' WITH neighbor ORDER BY neighbor.metric DESC LIMIT 1 RETURN neighbor"
+```
+![cypher_2](assets/cypher_2.png)
+
+
+12. ChatGPT 查询
 
 ```bash
 $ opendigger-cli chat "仓库‘X-lab2017/open-digger’,'vuejs/core' stars 数量的变化, 包含仓库名称" --ui
