@@ -1992,6 +1992,7 @@ dependencies = [
  "futures 0.3.28",
  "gluesql",
  "http",
+ "hyper",
  "itertools",
  "lazy_static",
  "once_cell",

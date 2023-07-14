@@ -167,7 +167,7 @@ impl Engine {
                     let mut report = crate::report::RepoOverview::new(owner);
                     report.generate_report().await?;
 
-                    crate::ui::RepoOverviewUI::new(report).run()?;
+                    //crate::ui::RepoOverviewUI::new(report).run()?;
                 }
             }
         }
