@@ -119,3 +119,5 @@ pub async fn execute_sql_queries(query: &str) -> anyhow::Result<Vec<Output>> {
 
     Ok(outputs)
 }
+
+

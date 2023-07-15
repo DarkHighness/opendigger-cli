@@ -1,6 +1,7 @@
 #![feature(let_chains)]
 #![feature(box_into_inner)]
 #![feature(async_closure)]
+#![feature(async_iterator)]
 
 use anyhow::Context;
 use tracing_subscriber::layer::SubscriberExt;
@@ -11,6 +12,7 @@ mod cli;
 mod command;
 mod config;
 mod engine;
+mod networkgraph;
 mod report;
 mod sql;
 mod ui;

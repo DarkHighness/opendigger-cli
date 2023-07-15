@@ -1,10 +1,12 @@
 use crate::command::Commands;
+use crate::networkgraph::analyze;
 use crate::sql::Storage;
 use crate::ui::{TableUI, UIMode};
 use anyhow::Context;
 use gluesql::core::ast;
 use gluesql::prelude::{Payload, PayloadVariable};
 use once_cell::sync::Lazy;
+use regex::Regex;
 
 pub use util::{execute_sql_queries, execute_sql_query};
 pub use value::{translate_from_gluesql_value, Value};
@@ -144,6 +146,92 @@ impl Engine {
         Ok(())
     }
 
+    async fn execute_cypher_query(
+        &self,
+        statements: String,
+        output_file: Option<String>,
+        ui_mode: UIMode,
+    ) -> Result<(), EngineExecutionError> {
+        let match_query1 = Regex::new(r#"MATCH \(n:Node \{value: '(.+?)'\}\)-\[]-\(neighbor\).*where n\.owner='(.+?)' and n\.metric='(.+?)'"#).unwrap();
+        let match_query2 =
+            Regex::new(r"RETURN (\w+),*\s*(\w+)='(\w+)' and (\w+)='(\w+)'.*LIMIT 1").unwrap();
+        let match_query3 = Regex::new(
+            r"MATCH \(n:Node \{value: '(?P<a>[^']+)'\}\) WHERE n.owner = '(?P<b>[^']+)'\s+AND n.metric = '(?P<c>[^']+)'\s+RETURN n"
+        )
+        .unwrap();
+      
+        if let Some(captures) = match_query1.captures(statements.as_str()) {
+            if let Some(node) = captures.get(1) {
+                if let Some(owner) = captures.get(2) {
+                    if let Some(metric) = captures.get(3) {
+                        let data =
+                            analyze::get_neighbors(metric.as_str(), owner.as_str(), node.as_str())
+                                .await;
+                        match data {
+                            Ok(data) => {
+                                let varible = data
+                                    .into_iter()
+                                    .map(|data| vec![data.into()])
+                                    .collect::<Vec<_>>();
+
+                                TableUI::new(
+                                    ui_mode,
+                                    "Neighbors".to_string(),
+                                    vec!["name".into()],
+                                    varible,
+                                )?
+                                .render()?;
+                            }
+                            Err(e) => println!("error: {:?}", e),
+                        }
+                    }
+                }
+            }
+        } else if let Some(captures) = match_query2.captures(statements.as_str()) {
+            let node = captures.get(1).map_or("", |m| m.as_str());
+            let owner = captures.get(3).map_or("", |m| m.as_str());
+            let metric = captures.get(5).map_or("", |m| m.as_str());
+            let data = analyze::get_max_neighbor(metric, owner, node).await;
+            match data {
+                Ok(data) => {
+                    let varible = vec![vec![data.to_string().into()]];
+
+                    TableUI::new(
+                        ui_mode,
+                        "Max Neighbor".to_string(),
+                        vec!["name".into()],
+                        varible,
+                    )?
+                    .render()?;
+                }
+                Err(e) => println!("error: {:?}", e),
+            }
+        } else if let Some(captures) = match_query3.captures(statements.as_str()) {
+            let node = captures.get(1).map_or("", |m| m.as_str());
+            let owner = captures.get(2).map_or("", |m| m.as_str());
+            let metric = captures.get(3).map_or("", |m| m.as_str());
+            let data = analyze::get_node_value(metric, owner, node).await;
+            match data {
+                Ok(data) => {
+                    let varible = vec![vec![data.to_string().into()]];
+
+                    TableUI::new(
+                        ui_mode,
+                        "Node Value".to_string(),
+                        vec!["name".into()],
+                        varible,
+                    )?
+                    .render()?;
+                }
+                Err(e) => println!("error: {:?}", e),
+            }
+        } else {
+            println!("Please enter supported Cypher query statement");
+        }
+
+        Ok(())
+    }
+
     pub async fn execute_command(&self, command: Commands) -> Result<(), EngineExecutionError> {
         tracing::debug!("Executing command: {:?}", command);
 
@@ -160,6 +248,10 @@ impl Engine {
                     command.ui_mode,
                 )
                 .await?;
+            }
+            Commands::CypherQuery(command) => {
+                self.execute_cypher_query(command.statements, command.output_file, command.ui_mode)
+                    .await?;
             }
             Commands::Report(command) => {
                 let owner = command.owner;

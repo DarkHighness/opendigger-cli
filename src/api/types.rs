@@ -15,6 +15,8 @@ pub enum Metric {
     Repo(RepositoryMetric),
     User(UserMetric),
     Custom,
+    SpecialCircumstances,
+
 }
 
 #[derive(
@@ -65,6 +67,7 @@ pub enum RepositoryMetric {
     ChangeRequestAge,
     DeveloperNetwork,
     RepoNetwork,
+
 }
 
 #[derive(
@@ -92,12 +95,14 @@ pub enum UserMetric {
     RepoNetwork,
 }
 
+
 impl AsRef<str> for Metric {
     fn as_ref(&self) -> &str {
         match self {
             Metric::Repo(metric) => metric.as_ref(),
             Metric::User(metric) => metric.as_ref(),
             Metric::Custom => "custom",
+            Metric::SpecialCircumstances => "project_openrank_detail/2022-12",
         }
     }
 }

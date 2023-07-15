@@ -4,6 +4,7 @@ use gluesql::core::ast;
 pub enum Commands {
     Download(DownloadCommand),
     SqlQuery(SqlQueryCommand),
+    CypherQuery(CypherQueryCommand),
     Report(ReportCommand),
 }
 
@@ -18,6 +19,13 @@ pub struct DownloadCommand {
 pub struct SqlQueryCommand {
     pub strategy: Box<dyn crate::sql::StorageStrategy>,
     pub statements: Vec<ast::Statement>,
+    pub output_file: Option<String>,
+    pub ui_mode: crate::ui::UIMode,
+}
+
+#[derive(Debug)]
+pub struct CypherQueryCommand {
+    pub statements: String,
     pub output_file: Option<String>,
     pub ui_mode: crate::ui::UIMode,
 }
@@ -49,6 +57,18 @@ impl Commands {
     ) -> Commands {
         Self::SqlQuery(SqlQueryCommand {
             strategy,
+            statements,
+            output_file,
+            ui_mode,
+        })
+    }
+
+    pub fn new_cypher_query_command(
+        statements: String,
+        output_file: Option<String>,
+        ui_mode: crate::ui::UIMode,
+    ) -> Commands {
+        Self::CypherQuery(CypherQueryCommand {
             statements,
             output_file,
             ui_mode,

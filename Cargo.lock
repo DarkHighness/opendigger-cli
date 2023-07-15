@@ -1996,6 +1996,7 @@ dependencies = [
  "itertools",
  "lazy_static",
  "once_cell",
+ "petgraph",
  "quick_cache",
  "regex",
  "reqwest",

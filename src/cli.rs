@@ -36,6 +36,18 @@ pub enum Commands {
         #[clap(name = "strategy", default_value_t = StorageStrategyType::BruteForce )]
         strategy: StorageStrategyType,
     },
+    #[clap(about = "Query data with cypher")]
+    #[clap(name = "cypher")]
+    CypherQuery {
+        #[clap(name = "query")]
+        query: String,
+        #[clap(short, long)]
+        output_file: Option<String>,
+        #[clap(long, default_value_t = false)]
+        ui: bool,
+        #[clap(name = "strategy", default_value_t = StorageStrategyType::BruteForce )]
+        strategy: StorageStrategyType,
+    },
     #[clap(about = "ChatGPT yes!")]
     #[clap(name = "chat")]
     ChatGPT {
@@ -160,6 +172,21 @@ pub async fn parse_command() -> crate::command::Commands {
                 ui_mode,
             )
         }
+        Commands::CypherQuery {
+            query,
+            output_file,
+            strategy,
+            ui,
+        } => {
+            let statements = parse_cypher_query(query).await;
+            let ui_mode = if ui {
+                crate::ui::UIMode::Interactive
+            } else {
+                crate::ui::UIMode::Simple
+            };
+
+            crate::command::Commands::new_cypher_query_command(statements, output_file, ui_mode)
+        }
         Commands::Report { owner, time } => {
             crate::command::Commands::new_report_command(owner, time)
         }
@@ -236,4 +263,8 @@ async fn parse_sql_query(
 
     let strategy = strategy.unwrap();
     (statements, strategy)
+}
+
+async fn parse_cypher_query(query: String) -> (String) {
+    return query;
 }
