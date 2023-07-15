@@ -27,4 +27,4 @@ jobs:
             RUSTTARGET: ${{ matrix.target }}
             ARCHIVE_TYPES: ${{ matrix.archive }}
             MINIFY: true
-            TOOLCHAIN_VERSION: nightly
+            TOOLCHAIN_VERSION: nightly-2023-03-08
