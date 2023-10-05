@@ -2,6 +2,8 @@
 
 本项目为 OpenSODA 挑战赛参赛项目。 旨在为 [OpenDigger](https://github.com/X-lab2017/open-digger) 提供的各类统计型和网络型的指标提供统一的 Terminal User Interface (TUI)。
 
+该文档为静态演示版本，为了更好的阅读体验，请访问 [README.md](./README.md)。
+
 ## **本项目的主要特性**
 
 * 🚀 基于 ChatGPT 的 **自然语言化查询** 功能
@@ -15,7 +17,7 @@
 
 ### **功能特性**
 
-部分演示提供了基于 [asciinema](https://asciinema.org/) 转换得到的GIF 演示。 若图像无法正常加载，请尝试静态演示版本 [README_STATIC.md](./README_STATIC.md)。
+部分演示提供了基于 [asciinema](https://asciinema.org/) 转换得到的GIF 演示。 若图像无法正常加载，请尝试
 
 #### **基于 ChatGPT 的自然语言化查询**
 
@@ -33,7 +35,7 @@
 $ opendigger-cli chat "仓库‘X-lab2017/open-digger’,'vuejs/core' stars 数量的变化, 保留仓库名称" --ui
 ```
 
-![chat query 1](https://github.com/DarkHighness/opendigger-cli/blob/main/doc/assets/chat_query_1.gif?raw=true)
+![chat query 1](https://github.com/DarkHighness/opendigger-cli/blob/main/doc/assets/chat_query_1.png?raw=true)
 
 > 注：
 >   本工具支持中文输入，但 asciinema 中录制中文字符存在乱码，故演示中使用英文输入。
@@ -44,7 +46,7 @@ $ opendigger-cli chat "仓库‘X-lab2017/open-digger’,'vuejs/core' stars 数�
 $ opendigger-cli chat "仓库‘X-lab2017/open-digger’ 在哪一个月获得了最多的 star" --ui
 ```
 
-![chat query 2](https://github.com/DarkHighness/opendigger-cli/blob/main/doc/assets/chat_query_2.gif?raw=true)
+![chat query 2](https://github.com/DarkHighness/opendigger-cli/blob/main/doc/assets/chat_query_2.png?raw=true)
 
 #### **SQL 和 Cypher 查询**
 
@@ -80,7 +82,7 @@ $ opendigger-cli sql "SHOW COLUMNS FROM Issues"
 $ opendigger-cli sql "SELECT * FROM Openrank WHERE name = 'X-lab2017/open-digger'" --ui
 ```
 
-![basic query 1](https://github.com/DarkHighness/opendigger-cli/blob/main/doc/assets/basic_query_1.gif?raw=true)
+![basic query 1](https://github.com/DarkHighness/opendigger-cli/blob/main/doc/assets/basic_query_1.png?raw=true)
 
 4. 查询 `X-lab2017/open-digger` 仓库在 `Openrank` 指标上的数据，按 `OpenRank` 值排序后，并将结果写入文件
 
@@ -88,7 +90,7 @@ $ opendigger-cli sql "SELECT * FROM Openrank WHERE name = 'X-lab2017/open-digger
 $ opendigger-cli sql "SELECT * FROM Openrank WHERE name = 'X-lab2017/open-digger'" -o openrank.csv > /dev/null
 ```
 
-![basic query 2](https://github.com/DarkHighness/opendigger-cli/blob/main/doc/assets/basic_query_2.gif?raw=true)
+![basic query 2](https://github.com/DarkHighness/opendigger-cli/blob/main/doc/assets/basic_query_2.png?raw=true)
 
 5. 查询 `X-lab2017/open-digger` 和 `vuejs/core` 仓库在 `Stars` 指标上的数据, 根据 `month` 进行连接，筛选出 star 之和大于 100 的月份
 
@@ -96,7 +98,7 @@ $ opendigger-cli sql "SELECT * FROM Openrank WHERE name = 'X-lab2017/open-digger
 $ opendigger-cli sql "SELECT * FROM Stars a LEFT JOIN Stars b ON a.month = b.month WHERE a.name = 'X-lab2017/open-digger' AND b.name = 'vuejs/core' AND a.value + b.value > 100" --ui
 ```
 
-![basic query 3](https://github.com/DarkHighness/opendigger-cli/blob/main/doc/assets/basic_query_3.gif?raw=true)
+![basic query 3](https://github.com/DarkHighness/opendigger-cli/blob/main/doc/assets/basic_query_3.png?raw=true)
 
 6. 查询 `X-lab2017/open-digger`, `facebook/react` 和 `vuejs/core` 仓库在 `Stars` 指标上的数据, 交互式 UI 展示
 
@@ -104,7 +106,7 @@ $ opendigger-cli sql "SELECT * FROM Stars a LEFT JOIN Stars b ON a.month = b.mon
 $ opendigger-cli sql "SELECT * FROM Stars WHERE name = 'X-lab2017/open-digger' OR name = 'facebook/react' OR name = 'vuejs/core'" --ui
 ```
 
-![basic query 4](https://github.com/DarkHighness/opendigger-cli/blob/main/doc/assets/basic_query_4.gif?raw=true)
+![basic query 4](https://github.com/DarkHighness/opendigger-cli/blob/main/doc/assets/basic_query_4.png?raw=true)
 
 **Cypher 查询**
 
@@ -114,7 +116,7 @@ $ opendigger-cli sql "SELECT * FROM Stars WHERE name = 'X-lab2017/open-digger' O
 $ opendigger-cli cypher "MATCH (n:Node {value: 'will-ww'}) WHERE n.owner = 'X-lab2017/open-digger' AND n.metric = 'Developer network' RETURN n"
 ```
 
-![cypher query 1](https://github.com/DarkHighness/opendigger-cli/blob/main/doc/assets/cypher_1.gif?raw=true)
+![cypher query 1](https://github.com/DarkHighness/opendigger-cli/blob/main/doc/assets/cypher_1.png?raw=true)
 
 2. 图查询：查询用户'Zzzzzhuzhiwei'在repo='X-lab2017/open-digger'上的'Developer network'上的所有有合作关系或者是有相关性的用户。
 
@@ -122,7 +124,7 @@ $ opendigger-cli cypher "MATCH (n:Node {value: 'will-ww'}) WHERE n.owner = 'X-la
 $ opendigger-cli cypher "MATCH (n:Node {value: 'Zzzzzhuzhiwei'})-[]-(neighbor) where n.owner='X-lab2017/open-digger' and n.metric='Developer network' RETURN neighbor"
 ```
 
-![cypher query 2](https://github.com/DarkHighness/opendigger-cli/blob/main/doc/assets/cypher_2.gif?raw=true)
+![cypher query 2](https://github.com/DarkHighness/opendigger-cli/blob/main/doc/assets/cypher_2.png?raw=true)
 
 3. 图查询： 查询用户'Zzzzzhuzhiwei'在repo='X-lab2017/open-digger'上的'Developer network'上的合作最紧密的用户。
 
@@ -144,7 +146,7 @@ $ opendigger-cli cypher "MATCH (n:Node {value: 'Zzzzzhuzhiwei'})-[]->(neighbor) 
 $ opendigger-cli download "X-lab2017/open-digger" "openrank" -o openrank.json
 ```
 
-![download](https://github.com/DarkHighness/opendigger-cli/blob/main/doc/assets/download_command.gif?raw=true)
+![download](https://github.com/DarkHighness/opendigger-cli/blob/main/doc/assets/download_command.png?raw=true)
 
 #### **整体报告**
 
