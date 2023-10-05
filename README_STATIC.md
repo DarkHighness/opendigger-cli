@@ -2,7 +2,7 @@
 
 本项目为 OpenSODA 挑战赛参赛项目。 旨在为 [OpenDigger](https://github.com/X-lab2017/open-digger) 提供的各类统计型和网络型的指标提供统一的 Terminal User Interface (TUI)。
 
-该文档为静态演示版本，为了更好的阅读体验，请访问 [README.md](./README.md)。
+**该文档为静态演示版本，为了更好的阅读体验，请访问 [README.md](./README.md)**。
 
 ## **本项目的主要特性**
 

@@ -11,12 +11,12 @@ jobs:
         fail-fast: false
         matrix:
           include:
-            # - target: x86_64-pc-windows-gnu
-            #   archive: zip
+            - target: x86_64-pc-windows-gnu
+              archive: zip
             - target: x86_64-unknown-linux-musl
               archive: tar.gz tar.xz tar.zst
-            # - target: x86_64-apple-darwin
-            #   archive: zip
+            - target: x86_64-apple-darwin
+              archive: zip
       steps:
         - uses: actions/checkout@master
         - name: Compile and release
@@ -27,4 +27,5 @@ jobs:
             RUSTTARGET: ${{ matrix.target }}
             ARCHIVE_TYPES: ${{ matrix.archive }}
             MINIFY: true
-            TOOLCHAIN_VERSION: nightly-2023-03-08
+            TOOLCHAIN_VERSION: nightly
+            EXTRA_FILES: "README.md LICENSE"

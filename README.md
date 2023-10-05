@@ -11,7 +11,25 @@
 
 ## **安装**
 
-本项目在 Github Release 提供在 Linux 平台上的二进制文件 [[🚀链接]](https://github.com/DarkHighness/opendigger-cli/releases/tag/v0.0.1-beta)。
+本项目在 Github Release 提供二进制文件 [[🚀链接]](https://github.com/DarkHighness/opendigger-cli/releases/tag/v0.0.1-beta)。
+
+若期望手动构建，可采用，需要 Nightly 版本的 Rust。
+
+```bash
+cargo install --git https://github.com/DarkHighness/opendigger-cli
+```
+
+请保证 `~/.cargo/bin` 在 `PATH` 环境变量中。
+
+或手动克隆仓库并构建：
+
+```bash
+git clone https://github.com/DarkHighness/opendigger-cli
+cd agg
+cargo build --release
+```
+
+构建完成后，可在 `target/release` 目录下找到可执行文件。
 
 ### **功能特性**
 
