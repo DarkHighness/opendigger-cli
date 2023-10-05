@@ -11,7 +11,7 @@
 
 ## **安装**
 
-本项目在 Github Release 提供二进制文件 [[🚀链接]](https://github.com/DarkHighness/opendigger-cli/releases/tag/v0.0.1-beta)。
+本项目在 Github Release 提供二进制文件 [[🚀链接]](https://github.com/DarkHighness/opendigger-cli/releases/latest)。
 
 若期望手动构建，可采用，需要 Nightly 版本的 Rust。
 
