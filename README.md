@@ -25,7 +25,7 @@ cargo install --git https://github.com/DarkHighness/opendigger-cli
 
 ```bash
 git clone https://github.com/DarkHighness/opendigger-cli
-cd agg
+cd opendigger-cli
 cargo build --release
 ```
 
